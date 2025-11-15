@@ -24,7 +24,7 @@ const DEFAULT_WORDS = [
   "Homer", "Michelangelo", "Galileo", "Caesar", "Lincoln"
 ];
 
-export default function CreateLobbyButton({ userId }: { userId: string }) {
+export default function CreateLobbyButton({ userId, isGuest = false }: { userId: string; isGuest?: boolean }) {
   const [isCreating, setIsCreating] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState("");
@@ -38,17 +38,22 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
       return;
     }
 
+    if (isPrivate && password.trim().length < 4) {
+      setError("Password must be at least 4 characters");
+      return;
+    }
+
     setIsCreating(true);
     setError(null);
     const supabase = createClient();
 
     try {
       const guestSessionStr = sessionStorage.getItem('guest_session');
-      const isGuest = !!guestSessionStr;
+      const isGuestUser = !!guestSessionStr;
       
       let hostId = userId;
 
-      if (isGuest) {
+      if (isGuestUser) {
         const guestSession = JSON.parse(guestSessionStr || '{}');
         hostId = guestSession.id;
       }
@@ -63,8 +68,7 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
         round_duration: 60,
       };
 
-      // Add password only if private
-      if (isPrivate && password.trim()) {
+      if (isPrivate && password.trim() && !isGuestUser) {
         lobbyData.password = password.trim();
       }
 
@@ -94,6 +98,8 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
       }
 
       setDialogOpen(false);
+      setPassword("");
+      setIsPrivate(false);
       router.push(`/game/lobby/${lobby.id}`);
     } catch (error: any) {
       console.error("[v0] Error creating lobby:", error);
@@ -133,32 +139,36 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
             </div>
           )}
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="private"
-              checked={isPrivate}
-              onCheckedChange={(checked) => setIsPrivate(checked as boolean)}
-            />
-            <Label htmlFor="private" className="flex items-center gap-2 cursor-pointer">
-              <Lock className="w-4 h-4" />
-              Private Lobby
-            </Label>
-          </div>
+          {!isGuest && (
+            <>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="private"
+                  checked={isPrivate}
+                  onCheckedChange={(checked) => setIsPrivate(checked as boolean)}
+                />
+                <Label htmlFor="private" className="flex items-center gap-2 cursor-pointer">
+                  <Lock className="w-4 h-4" />
+                  Private Lobby
+                </Label>
+              </div>
 
-          {isPrivate && (
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter lobby password"
-              />
-              <p className="text-sm text-muted-foreground">
-                Players will need this password to join
-              </p>
-            </div>
+              {isPrivate && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter lobby password (min 4 characters)"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Players will need this password to join
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           <Button

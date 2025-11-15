@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -131,7 +131,7 @@ function GamePageContent() {
         </header>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <CreateLobbyButton userId={user.id} />
+          <CreateLobbyButton userId={user.id} isGuest={isGuest} />
           <LobbyList userId={user.id} />
         </div>
       </div>
