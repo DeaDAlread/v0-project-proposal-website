@@ -53,18 +53,24 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
         hostId = guestSession.id;
       }
 
+      const lobbyData: any = {
+        host_id: hostId,
+        status: "waiting",
+        deck_name: "Default Deck",
+        deck_words: DEFAULT_WORDS,
+        max_rounds: 5,
+        current_round: 0,
+        round_duration: 60,
+      };
+
+      // Add password only if private
+      if (isPrivate && password.trim()) {
+        lobbyData.password = password.trim();
+      }
+
       const { data: lobby, error: lobbyError } = await supabase
         .from("lobbies")
-        .insert({
-          host_id: hostId,
-          status: "waiting",
-          deck_name: "Default Deck",
-          deck_words: DEFAULT_WORDS,
-          max_rounds: 5,
-          current_round: 0,
-          round_duration: 60,
-          password: isPrivate ? password : null,
-        })
+        .insert(lobbyData)
         .select()
         .single();
 
@@ -83,14 +89,15 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
 
       if (playerError) {
         console.error("[v0] Player insertion error:", playerError);
+        await supabase.from("lobbies").delete().eq("id", lobby.id);
         throw new Error(playerError.message || "Failed to join lobby");
       }
 
-      console.log("[v0] Lobby created successfully:", lobby.id);
+      setDialogOpen(false);
       router.push(`/game/lobby/${lobby.id}`);
     } catch (error: any) {
       console.error("[v0] Error creating lobby:", error);
-      setError(error.message || "Failed to create lobby");
+      setError(error.message || "Failed to create lobby. Please try again.");
     } finally {
       setIsCreating(false);
     }
