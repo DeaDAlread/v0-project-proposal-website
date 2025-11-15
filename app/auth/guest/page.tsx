@@ -41,7 +41,7 @@ export default function GuestLoginPage() {
 
     try {
       const guestId = Math.random().toString(36).substring(2, 15);
-      const guestEmail = `guest_${guestId}@whoami.guest`;
+      const guestEmail = `guest_${guestId}@temp-guest.example.com`;
       const guestPassword = Math.random().toString(36).substring(2, 20);
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
