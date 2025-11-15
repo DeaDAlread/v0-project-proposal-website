@@ -45,7 +45,7 @@ export default function JoinByCode({ userId }: { userId: string }) {
       const { data: lobby, error: lobbyError } = await supabase
         .from('lobbies')
         .select('id, status, password')
-        .eq('room_code', code)
+        .eq('id', code)
         .eq('status', 'waiting')
         .single();
 
@@ -118,9 +118,8 @@ export default function JoinByCode({ userId }: { userId: string }) {
                 id="lobby-code"
                 value={lobbyCode}
                 onChange={(e) => setLobbyCode(e.target.value)}
-                placeholder={t('joinByCode.placeholder')}
-                maxLength={10}
-                className="font-mono text-lg tracking-wider"
+                placeholder="e.g., 5b377900-a0dd-4fc8-..."
+                className="font-mono text-sm"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && lobbyCode.trim() && !isJoining) {
                     handleJoinByCode();

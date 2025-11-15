@@ -287,8 +287,7 @@ export default function LobbyRoom({
   };
 
   const handleCopyCode = async () => {
-    const codeToCopy = lobby?.room_code || lobbyId;
-    await navigator.clipboard.writeText(codeToCopy);
+    await navigator.clipboard.writeText(lobbyId);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -339,7 +338,7 @@ export default function LobbyRoom({
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">{t('room.lobbyCode')}</p>
                       <code className="bg-primary/10 px-4 py-2 rounded-lg text-foreground font-mono text-2xl font-bold tracking-wider select-all border border-primary/20">
-                        {lobby?.room_code || lobbyId.slice(0, 8).toUpperCase()}
+                        {lobbyId}
                       </code>
                     </div>
                     <Button
