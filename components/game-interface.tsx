@@ -1,0 +1,965 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from 'next/navigation';
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Crown, Send, Trophy, ArrowRight, RotateCcw, Clock, Lightbulb } from 'lucide-react';
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+type Profile = {
+  id: string;
+  display_name: string;
+  email: string;
+};
+
+type Player = {
+  id: string;
+  user_id: string;
+  score: number;
+  profiles: Profile;
+};
+
+type Lobby = {
+  id: string;
+  host_id: string;
+  status: string;
+  current_round: number;
+  max_rounds: number;
+  current_player_id: string | null;
+  secret_word: string | null;
+  deck_name: string;
+  deck_words: string[];
+  chat_start_time: string;
+  round_start_time: string;
+  round_duration: number;
+  hints_given: string[]; // Added hints tracking
+};
+
+type ChatMessage = {
+  id: string;
+  user_id: string;
+  message: string;
+  is_guess: boolean;
+  is_correct: boolean;
+  created_at: string;
+  profiles: Profile;
+};
+
+export default function GameInterface({
+  lobby: initialLobby,
+  players: initialPlayers,
+  userId,
+  userProfile,
+  isHost,
+}: {
+  lobby: Lobby;
+  players: Player[];
+  userId: string;
+  userProfile: any;
+  isHost: boolean;
+}) {
+  const [lobby, setLobby] = useState<Lobby>(initialLobby);
+  const [players, setPlayers] = useState<Player[]>(initialPlayers);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messageInput, setMessageInput] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [closeGuessMessage, setCloseGuessMessage] = useState<string>("");
+  const [showNonHostNext, setShowNonHostNext] = useState(false);
+  const isAdvancingRef = useRef(false);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timerExpiredAtRef = useRef<number | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const supabase = createClient();
+
+  const isCurrentPlayer = lobby.current_player_id === userId;
+  const currentPlayerName = players.find(p => p.user_id === lobby.current_player_id)?.profiles.display_name || "Unknown";
+
+  useEffect(() => {
+    setLobby({ ...initialLobby });
+    setPlayers([...initialPlayers]);
+  }, [initialLobby, initialPlayers]);
+
+  useEffect(() => {
+    fetchMessages();
+    fetchPlayers();
+
+    const channel = supabase
+      .channel(`game_${lobby.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "lobbies", filter: `id=eq.${lobby.id}` },
+        (payload) => {
+          if (payload.new) {
+            setLobby({ ...payload.new as Lobby });
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "lobby_players", filter: `lobby_id=eq.${lobby.id}` },
+        () => {
+          fetchPlayers();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "chat_messages", filter: `lobby_id=eq.${lobby.id}` },
+        async (payload) => {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id, display_name, email")
+            .eq("id", (payload.new as ChatMessage).user_id)
+            .single();
+          
+          if (profile) {
+            setMessages(prev => [...prev, { ...(payload.new as ChatMessage), profiles: profile }]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [lobby.id]);
+
+  useEffect(() => {
+    // Clear any existing interval
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+
+    setShowNonHostNext(false);
+    timerExpiredAtRef.current = null;
+
+    const updateTimer = async () => {
+      if (!lobby.round_start_time || lobby.status !== "playing") return;
+      
+      const startTime = new Date(lobby.round_start_time).getTime();
+      const now = Date.now();
+      const elapsed = Math.floor((now - startTime) / 1000);
+      const remaining = Math.max(0, lobby.round_duration - elapsed);
+      
+      setTimeRemaining(remaining);
+      
+      if (remaining === 0 && !isAdvancingRef.current) {
+        if (timerExpiredAtRef.current === null) {
+          timerExpiredAtRef.current = Date.now();
+        }
+
+        const timeSinceExpired = Math.floor((Date.now() - timerExpiredAtRef.current) / 1000);
+        if (timeSinceExpired >= 5 && !isHost) {
+          setShowNonHostNext(true);
+        }
+
+        // Only host auto-advances immediately
+        if (isHost) {
+          isAdvancingRef.current = true;
+          
+          try {
+            const nextRound = lobby.current_round + 1;
+            
+            if (nextRound > lobby.max_rounds) {
+              await handleEndGame();
+            } else {
+              await handleNextRoundTimerExpired();
+            }
+          } catch (error) {
+            console.error("Timer advance error:", error);
+          } finally {
+            setTimeout(() => {
+              isAdvancingRef.current = false;
+            }, 2000);
+          }
+        }
+      }
+    };
+
+    updateTimer();
+    timerIntervalRef.current = setInterval(updateTimer, 1000);
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    };
+  }, [lobby.round_start_time, lobby.round_duration, lobby.status, lobby.current_round, lobby.max_rounds, isHost]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const fetchPlayers = async () => {
+    const { data } = await supabase
+      .from("lobby_players")
+      .select(`
+        *,
+        profiles(id, display_name, email)
+      `)
+      .eq("lobby_id", lobby.id)
+      .order("score", { ascending: false });
+
+    if (data) setPlayers(data as Player[]);
+  };
+
+  const fetchMessages = async () => {
+    const { data } = await supabase
+      .from("chat_messages")
+      .select(`
+        *,
+        profiles(id, display_name, email)
+      `)
+      .eq("lobby_id", lobby.id)
+      .gte("created_at", lobby.chat_start_time)
+      .order("created_at", { ascending: true });
+
+    if (data) setMessages(data as ChatMessage[]);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageInput.trim() || isProcessing || isAdvancingRef.current) return;
+
+    const sanitizedMessage = messageInput.trim().slice(0, 500);
+    
+    if (isCurrentPlayer && sanitizedMessage.toLowerCase() === lobby.secret_word?.toLowerCase()) {
+      setCloseGuessMessage("You cannot type the answer!");
+      setTimeout(() => setCloseGuessMessage(""), 3000);
+      setMessageInput("");
+      return;
+    }
+
+    setIsProcessing(true);
+    setMessageInput("");
+
+    try {
+      const isGuess = !isCurrentPlayer;
+      const isCorrect = isGuess && sanitizedMessage.toLowerCase() === lobby.secret_word?.toLowerCase();
+
+      if (isGuess && !isCorrect && lobby.secret_word) {
+        const isClose = checkCloseGuess(sanitizedMessage, lobby.secret_word);
+        if (isClose) {
+          setCloseGuessMessage("🔥 You're getting close! Keep trying!");
+          setTimeout(() => setCloseGuessMessage(""), 4000);
+        }
+      }
+
+      const { error: messageError } = await supabase
+        .from("chat_messages")
+        .insert({
+          lobby_id: lobby.id,
+          user_id: userId,
+          message: sanitizedMessage,
+          is_guess: isGuess,
+          is_correct: isCorrect,
+        });
+
+      if (messageError) throw messageError;
+
+      if (isCorrect && !isAdvancingRef.current) {
+        isAdvancingRef.current = true;
+        
+        const minPoints = 5;
+        const maxTimeBonus = 30;
+        const timeBonus = Math.floor((timeRemaining / lobby.round_duration) * maxTimeBonus);
+        const totalPoints = minPoints + timeBonus;
+
+        const currentPlayer = players.find(p => p.user_id === userId);
+        if (currentPlayer) {
+          const { error: scoreError } = await supabase
+            .from("lobby_players")
+            .update({ score: currentPlayer.score + totalPoints })
+            .eq("lobby_id", lobby.id)
+            .eq("user_id", userId);
+
+          if (scoreError) {
+            console.error("Score update error:", scoreError);
+          } else {
+            await fetchPlayers();
+          }
+        }
+
+        setTimeout(async () => {
+          const nextRound = lobby.current_round + 1;
+          
+          if (nextRound > lobby.max_rounds) {
+            await handleEndGame();
+            isAdvancingRef.current = false;
+            return;
+          }
+
+          const usedWords = messages
+            .filter(m => m.is_correct)
+            .map(m => m.message.toLowerCase());
+          usedWords.push(lobby.secret_word?.toLowerCase() || "");
+          
+          const availableWords = lobby.deck_words.filter(
+            w => !usedWords.includes(w.toLowerCase())
+          );
+          
+          const randomWord = availableWords.length > 0
+            ? availableWords[Math.floor(Math.random() * availableWords.length)]
+            : lobby.deck_words[Math.floor(Math.random() * lobby.deck_words.length)];
+
+          const currentPlayerIndex = players.findIndex(p => p.user_id === lobby.current_player_id);
+          const nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
+          const nextPlayer = players[nextPlayerIndex];
+
+          const { error } = await supabase
+            .from("lobbies")
+            .update({
+              current_round: nextRound,
+              current_player_id: nextPlayer.user_id,
+              secret_word: randomWord,
+              chat_start_time: new Date().toISOString(),
+              round_start_time: new Date().toISOString(),
+              hints_given: [],
+            })
+            .eq("id", lobby.id);
+
+          if (error) {
+            console.error("Error advancing round:", error);
+          }
+          
+          isAdvancingRef.current = false;
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      isAdvancingRef.current = false;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleNextRound = async () => {
+    if (isAdvancingRef.current) return;
+    if (!isHost && !showNonHostNext) return;
+    
+    isAdvancingRef.current = true;
+    setShowNonHostNext(false);
+    timerExpiredAtRef.current = null;
+
+    try {
+      const nextRound = lobby.current_round + 1;
+      
+      if (nextRound > lobby.max_rounds) {
+        // Only host can end game
+        if (isHost) {
+          await handleEndGame();
+        }
+        return;
+      }
+
+      const usedWords = messages
+        .filter(m => m.is_correct)
+        .map(m => m.message.toLowerCase());
+      usedWords.push(lobby.secret_word?.toLowerCase() || "");
+      
+      const availableWords = lobby.deck_words.filter(
+        w => !usedWords.includes(w.toLowerCase())
+      );
+      
+      const randomWord = availableWords.length > 0
+        ? availableWords[Math.floor(Math.random() * availableWords.length)]
+        : lobby.deck_words[Math.floor(Math.random() * lobby.deck_words.length)];
+
+      const currentPlayerIndex = players.findIndex(p => p.user_id === lobby.current_player_id);
+      const nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      const nextPlayer = players[nextPlayerIndex];
+
+      const { error } = await supabase
+        .from("lobbies")
+        .update({
+          current_round: nextRound,
+          current_player_id: nextPlayer.user_id,
+          secret_word: randomWord,
+          chat_start_time: new Date().toISOString(),
+          round_start_time: new Date().toISOString(),
+          hints_given: [],
+        })
+        .eq("id", lobby.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error starting next round:", error);
+    } finally {
+      setTimeout(() => {
+        isAdvancingRef.current = false;
+      }, 1000);
+    }
+  };
+
+  const handleEndGame = async () => {
+    if (!isHost) return;
+
+    try {
+      const winner = players.reduce((prev, current) =>
+        prev.score > current.score ? prev : current
+      );
+
+      const { data: leaderboardEntry } = await supabase
+        .from("leaderboard")
+        .select("*")
+        .eq("user_id", winner.user_id)
+        .single();
+
+      if (leaderboardEntry) {
+        await supabase
+          .from("leaderboard")
+          .update({ 
+            wins: leaderboardEntry.wins + 1,
+            display_name: winner.profiles.display_name 
+          })
+          .eq("user_id", winner.user_id);
+      } else {
+        await supabase
+          .from("leaderboard")
+          .insert({
+            user_id: winner.user_id,
+            display_name: winner.profiles.display_name,
+            wins: 1,
+          });
+      }
+
+      await supabase
+        .from("lobbies")
+        .update({ status: "finished" })
+        .eq("id", lobby.id);
+
+      router.push(`/game/results/${lobby.id}`);
+    } catch (error) {
+      console.error("Error ending game:", error);
+    }
+  };
+
+  const handleResetGame = async () => {
+    if (!isHost || isAdvancingRef.current) return;
+    isAdvancingRef.current = true;
+
+    try {
+      const randomWord = lobby.deck_words[Math.floor(Math.random() * lobby.deck_words.length)];
+      const randomPlayer = players[Math.floor(Math.random() * players.length)];
+
+      await supabase
+        .from("lobby_players")
+        .update({ score: 0 })
+        .eq("lobby_id", lobby.id);
+
+      await supabase
+        .from("lobbies")
+        .update({
+          current_round: 1,
+          current_player_id: randomPlayer.user_id,
+          secret_word: randomWord,
+          chat_start_time: new Date().toISOString(),
+          round_start_time: new Date().toISOString(),
+          hints_given: [], // Reset hints on game reset
+        })
+        .eq("id", lobby.id);
+    } catch (error) {
+      console.error("Error resetting game:", error);
+    } finally {
+      setTimeout(() => {
+        isAdvancingRef.current = false;
+      }, 1000);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getTimerColor = () => {
+    if (timeRemaining > 30) return "text-green-600";
+    if (timeRemaining > 10) return "text-yellow-600";
+    return "text-red-600 animate-pulse";
+  };
+
+  const checkCloseGuess = (guess: string, answer: string): boolean => {
+    const g = guess.toLowerCase().trim();
+    const a = answer.toLowerCase().trim();
+    
+    if (g === a) return false;
+    
+    if (a.includes(g) && g.length > 2) return true;
+    if (g.includes(a) && a.length > 2) return true;
+    
+    const distance = levenshteinDistance(g, a);
+    const maxLength = Math.max(g.length, a.length);
+    const similarity = 1 - distance / maxLength;
+    
+    return similarity >= 0.7;
+  };
+
+  const levenshteinDistance = (str1: string, str2: string): number => {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  };
+
+  const generateHint = () => {
+    if (!lobby.secret_word || !isCurrentPlayer) return "";
+    
+    const hintsGiven = lobby.hints_given || [];
+    const word = lobby.secret_word;
+    
+    // First hint: Show letter count with underscores
+    if (hintsGiven.length === 0) {
+      const display = word.split('').map(char => char === ' ' ? '  ' : '_').join(' ');
+      return `💡 Hint: ${display}`;
+    }
+    
+    // Second hint: Show first letter(s) of each word
+    if (hintsGiven.length === 1) {
+      const revealedPositions = new Set<number>();
+      word.split('').forEach((char, idx) => {
+        if (idx === 0 || word[idx - 1] === ' ') {
+          revealedPositions.add(idx);
+        }
+      });
+      
+      const display = word.split('').map((char, idx) => {
+        if (char === ' ') return '  ';
+        if (revealedPositions.has(idx)) return char.toUpperCase();
+        return '_';
+      }).join(' ');
+      
+      return `💡 Hint: ${display}`;
+    }
+    
+    // Maximum 2 more letters can be revealed after first letter (total 3 hints after letter count)
+    if (hintsGiven.length >= 4) {
+      return "💡 Maximum hints reached!";
+    }
+    
+    // Get already revealed positions from previous hints
+    const revealedPositions = new Set<number>();
+    
+    // Mark first letters as revealed
+    word.split('').forEach((char, idx) => {
+      if (idx === 0 || word[idx - 1] === ' ') {
+        revealedPositions.add(idx);
+      }
+    });
+    
+    // Parse previous hints to find revealed positions
+    hintsGiven.slice(2).forEach(hint => {
+      const display = hint.split('💡 Hint: ')[1] || '';
+      const letters = display.split(' ').filter(c => c !== '');
+      let wordIdx = 0;
+      word.split('').forEach((char, idx) => {
+        if (char === ' ') return;
+        const displayChar = letters[wordIdx];
+        if (displayChar && displayChar !== '_' && displayChar === char.toUpperCase()) {
+          revealedPositions.add(idx);
+        }
+        wordIdx++;
+      });
+    });
+    
+    // Get available positions (non-space, non-revealed)
+    const availablePositions: number[] = [];
+    word.split('').forEach((char, idx) => {
+      if (char !== ' ' && !revealedPositions.has(idx)) {
+        availablePositions.push(idx);
+      }
+    });
+    
+    if (availablePositions.length === 0) {
+      return "💡 All letters revealed!";
+    }
+    
+    // Reveal only 1 random letter per hint
+    const shuffled = [...availablePositions].sort(() => Math.random() - 0.5);
+    const positionToReveal = shuffled[0];
+    revealedPositions.add(positionToReveal);
+    
+    // Build hint message showing the word with revealed letters
+    const display = word.split('').map((char, idx) => {
+      if (char === ' ') return '  ';
+      if (revealedPositions.has(idx)) return char.toUpperCase();
+      return '_';
+    }).join(' ');
+    
+    return `💡 Hint: ${display}`;
+  };
+
+  const areAllLettersRevealed = (): boolean => {
+    if (!lobby.secret_word) return true;
+    const hintsGiven = lobby.hints_given || [];
+    return hintsGiven.length >= 4; // Max 4 hints: underscores, first letters, then 2 more letters
+  };
+
+  const handleGiveHint = async () => {
+    if (!isCurrentPlayer || isProcessing) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const hint = generateHint();
+      const hintsGiven = lobby.hints_given || [];
+      
+      // Add the new hint to the array
+      const updatedHints = [...hintsGiven, hint];
+      
+      // Update the lobby with the new hint
+      const { error } = await supabase
+        .from("lobbies")
+        .update({ hints_given: updatedHints })
+        .eq("id", lobby.id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error giving hint:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleNextRoundTimerExpired = async () => {
+    if (isAdvancingRef.current) return;
+
+    try {
+      const nextRound = lobby.current_round + 1;
+      
+      if (nextRound > lobby.max_rounds) {
+        if (isHost) {
+          await handleEndGame();
+        }
+        return;
+      }
+
+      const usedWords = messages
+        .filter(m => m.is_correct)
+        .map(m => m.message.toLowerCase());
+      usedWords.push(lobby.secret_word?.toLowerCase() || "");
+      
+      const availableWords = lobby.deck_words.filter(
+        w => !usedWords.includes(w.toLowerCase())
+      );
+      
+      const randomWord = availableWords.length > 0
+        ? availableWords[Math.floor(Math.random() * availableWords.length)]
+        : lobby.deck_words[Math.floor(Math.random() * lobby.deck_words.length)];
+
+      const currentPlayerIndex = players.findIndex(p => p.user_id === lobby.current_player_id);
+      const nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      const nextPlayer = players[nextPlayerIndex];
+
+      const { error } = await supabase
+        .from("lobbies")
+        .update({
+          current_round: nextRound,
+          current_player_id: nextPlayer.user_id,
+          secret_word: randomWord,
+          chat_start_time: new Date().toISOString(),
+          round_start_time: new Date().toISOString(),
+          hints_given: [],
+        })
+        .eq("id", lobby.id);
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error("Error in handleNextRoundTimerExpired:", error);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
+      <div className="container mx-auto max-w-6xl">
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="md:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl text-purple-600">
+                    Round {lobby.current_round} of {lobby.max_rounds}
+                  </CardTitle>
+                  <div className="flex items-center gap-4">
+                    <div className={`flex items-center gap-2 text-2xl font-bold ${getTimerColor()}`}>
+                      <Clock className="w-6 h-6" />
+                      {formatTime(timeRemaining)}
+                    </div>
+                    {isHost && (
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleNextRound}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <ArrowRight className="w-4 h-4 mr-2" />
+                          Next Round
+                        </Button>
+                        <Button
+                          onClick={handleResetGame}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Reset
+                        </Button>
+                      </div>
+                    )}
+                    {!isHost && showNonHostNext && (
+                      <Button
+                        onClick={handleNextRound}
+                        size="sm"
+                        variant="default"
+                        className="bg-orange-500 hover:bg-orange-600 animate-pulse"
+                      >
+                        <ArrowRight className="w-4 h-4 mr-2" />
+                        Next Round
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="p-6 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg text-center">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Current Player
+                  </p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {currentPlayerName}
+                  </p>
+                  {isCurrentPlayer && (
+                    <div className="mt-4 p-4 bg-white rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Your Secret Word
+                      </p>
+                      <p className="text-3xl font-bold text-pink-600">
+                        {lobby.secret_word}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Answer questions about this word!
+                      </p>
+                      <p className="text-xs text-red-600 font-semibold mt-1">
+                        ⚠️ You cannot type this word in the chat!
+                      </p>
+                      <Button 
+                        onClick={handleGiveHint}
+                        disabled={isProcessing || areAllLettersRevealed()}
+                        className="mt-3"
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Lightbulb className="w-4 h-4 mr-2" />
+                        {areAllLettersRevealed() 
+                          ? "All letters revealed!" 
+                          : `Give Hint (${(lobby.hints_given || []).length} given)`
+                        }
+                      </Button>
+                    </div>
+                  )}
+                  {!isCurrentPlayer && (
+                    <div className="mt-2">
+                      <p className="text-sm text-muted-foreground">
+                        Try to guess who they are!
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Faster guesses earn more points! (5-35 points based on speed)
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Chat & Guesses</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {closeGuessMessage && (
+                  <div className="mb-4 p-3 bg-orange-100 border-2 border-orange-400 rounded-lg animate-pulse">
+                    <p className="text-center font-semibold text-orange-700">
+                      {closeGuessMessage}
+                    </p>
+                  </div>
+                )}
+
+                {lobby.hints_given && lobby.hints_given.length > 0 && (
+                  <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-lg">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Lightbulb className="w-5 h-5 text-blue-600" />
+                      <h3 className="font-semibold text-blue-900">Hints Given This Round</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {lobby.hints_given.map((hint, index) => (
+                        <div 
+                          key={index}
+                          className="p-2 bg-white rounded border border-blue-200"
+                        >
+                          <p className="text-sm text-blue-800">{hint}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <ScrollArea className="h-[400px] pr-4">
+                  <div className="space-y-3">
+                    {messages
+                      .filter(msg => !msg.message.startsWith('💡'))
+                      .map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`p-3 rounded-lg ${
+                          msg.is_correct
+                            ? "bg-green-100 border-2 border-green-500"
+                            : msg.is_guess
+                            ? "bg-yellow-50"
+                            : "bg-white"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-purple-600">
+                              {msg.profiles.display_name}
+                              {msg.user_id === userId && (
+                                <span className="text-xs text-muted-foreground ml-1">
+                                  (You)
+                                </span>
+                              )}
+                            </p>
+                            <p className="text-sm mt-1">{msg.message}</p>
+                          </div>
+                          {msg.is_correct && (
+                            <Trophy className="w-5 h-5 text-green-600 flex-shrink-0" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
+
+                <form onSubmit={handleSendMessage} className="mt-4 flex gap-2">
+                  <Input
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    placeholder={
+                      isCurrentPlayer
+                        ? "Answer questions from other players... (Cannot type the answer!)"
+                        : "Ask a question or make a guess..."
+                    }
+                    disabled={isProcessing}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isProcessing || !messageInput.trim()}
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Scoreboard</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {players.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        player.user_id === lobby.current_player_id
+                          ? "bg-purple-100 border-2 border-purple-500"
+                          : "bg-white border"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {index === 0 && (
+                          <Trophy className="w-4 h-4 text-yellow-500" />
+                        )}
+                        {player.user_id === lobby.host_id && (
+                          <Crown className="w-4 h-4 text-purple-500" />
+                        )}
+                        <div>
+                          <p className="font-medium text-sm">
+                            {player.profiles.display_name}
+                          </p>
+                          {player.user_id === userId && (
+                            <span className="text-xs text-muted-foreground">
+                              You
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold text-purple-600">
+                        {player.score}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Game Info</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Deck:</span>
+                  <span className="font-medium">{lobby.deck_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Players:</span>
+                  <span className="font-medium">{players.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Round Time:</span>
+                  <span className="font-medium">{lobby.round_duration}s</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

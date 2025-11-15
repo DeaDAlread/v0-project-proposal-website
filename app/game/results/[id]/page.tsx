@@ -1,0 +1,151 @@
+import { redirect } from 'next/navigation';
+import { createClient } from "@/lib/supabase/server";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Trophy, Crown, Home, BarChart } from 'lucide-react';
+
+export default async function ResultsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user) {
+    redirect("/auth/login");
+  }
+
+  const { data: lobby } = await supabase
+    .from("lobbies")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (!lobby) {
+    redirect("/game");
+  }
+
+  const { data: players } = await supabase
+    .from("lobby_players")
+    .select(`
+      *,
+      profiles(id, display_name, email)
+    `)
+    .eq("lobby_id", id)
+    .order("score", { ascending: false });
+
+  const winner = players?.[0];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
+      <div className="container mx-auto max-w-4xl">
+        <Card className="mb-6">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Trophy className="w-20 h-20 text-yellow-500" />
+            </div>
+            <CardTitle className="text-4xl font-bold text-purple-600 mb-2">
+              Game Over!
+            </CardTitle>
+            <CardDescription className="text-lg">
+              {winner && (
+                <>
+                  <Crown className="w-5 h-5 inline text-yellow-500 mr-2" />
+                  Winner: {winner.profiles.display_name}
+                </>
+              )}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart className="w-5 h-5" />
+              Final Scoreboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {players?.map((player, index) => (
+                <div
+                  key={player.id}
+                  className={`flex items-center justify-between p-4 rounded-lg ${
+                    index === 0
+                      ? "bg-gradient-to-r from-yellow-100 to-yellow-200 border-2 border-yellow-500"
+                      : index === 1
+                      ? "bg-gradient-to-r from-gray-100 to-gray-200"
+                      : index === 2
+                      ? "bg-gradient-to-r from-orange-100 to-orange-200"
+                      : "bg-white border"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white shadow">
+                      {index === 0 && (
+                        <Trophy className="w-6 h-6 text-yellow-500" />
+                      )}
+                      {index === 1 && (
+                        <Trophy className="w-5 h-5 text-gray-400" />
+                      )}
+                      {index === 2 && (
+                        <Trophy className="w-4 h-4 text-orange-600" />
+                      )}
+                      {index > 2 && (
+                        <span className="text-lg font-bold text-muted-foreground">
+                          {index + 1}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold text-lg">
+                        {player.profiles.display_name}
+                      </p>
+                      {player.user_id === data.user.id && (
+                        <span className="text-xs text-purple-600 font-medium">
+                          You
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-purple-600">
+                      {player.score}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {player.score === 1 ? "point" : "points"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex gap-4 justify-center">
+          <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
+            <Link href="/game">
+              <Home className="w-4 h-4 mr-2" />
+              Back to Lobbies
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href="/game/leaderboard">
+              <Trophy className="w-4 h-4 mr-2" />
+              View Leaderboard
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

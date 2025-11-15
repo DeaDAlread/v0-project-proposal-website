@@ -1,0 +1,3 @@
+-- Insert some default words for the default deck
+-- These will be used when no custom deck is selected
+-- Note: This is just sample data, you can modify as needed
