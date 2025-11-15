@@ -14,6 +14,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PlusCircle, Lock } from 'lucide-react';
 
 const DEFAULT_WORDS = [
@@ -32,6 +33,11 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
   const router = useRouter();
 
   const handleCreateLobby = async () => {
+    if (isPrivate && !password.trim()) {
+      setError("Please enter a password for private lobby");
+      return;
+    }
+
     setIsCreating(true);
     setError(null);
     const supabase = createClient();
@@ -57,6 +63,7 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
           max_rounds: 5,
           current_round: 0,
           round_duration: 60,
+          password: isPrivate ? password : null,
         })
         .select()
         .single();
@@ -92,16 +99,16 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-dashed border-purple-300 bg-purple-50/50">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-dashed border-primary/30 bg-primary/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-purple-600">
+            <CardTitle className="flex items-center gap-2 text-primary">
               <PlusCircle className="w-6 h-6" />
               Create New Game
             </CardTitle>
             <CardDescription>Start a new lobby and invite friends</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full bg-purple-600 hover:bg-purple-700">
+            <Button className="w-full">
               Create Lobby
             </Button>
           </CardContent>
@@ -114,15 +121,43 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
         </DialogHeader>
         <div className="space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded">
               {error}
+            </div>
+          )}
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="private"
+              checked={isPrivate}
+              onCheckedChange={(checked) => setIsPrivate(checked as boolean)}
+            />
+            <Label htmlFor="private" className="flex items-center gap-2 cursor-pointer">
+              <Lock className="w-4 h-4" />
+              Private Lobby
+            </Label>
+          </div>
+
+          {isPrivate && (
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter lobby password"
+              />
+              <p className="text-sm text-muted-foreground">
+                Players will need this password to join
+              </p>
             </div>
           )}
 
           <Button
             onClick={handleCreateLobby}
             disabled={isCreating}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            className="w-full"
           >
             {isCreating ? "Creating..." : "Create Lobby"}
           </Button>

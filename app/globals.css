@@ -24,6 +24,10 @@
     --input: 280 10% 92%;
     --ring: 290 60% 55%;
     --radius: 0.625rem;
+    /* Added gradient color variables for light mode */
+    --gradient-from: 320 70% 98%;
+    --gradient-via: 280 70% 98%;
+    --gradient-to: 240 70% 98%;
   }
 
   .dark {
@@ -46,6 +50,10 @@
     --border: 0 0% 26.9%;
     --input: 0 0% 26.9%;
     --ring: 0 0% 43.9%;
+    /* Added gradient color variables for dark mode */
+    --gradient-from: 0 0% 10%;
+    --gradient-via: 0 0% 12%;
+    --gradient-to: 0 0% 14%;
   }
 }
 
