@@ -14,12 +14,14 @@ import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import { createClient } from '@/lib/supabase/client';
+import { useLanguage } from '@/lib/language-context';
 
 export default function GuestLoginPage() {
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleGuestLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,25 +83,25 @@ export default function GuestLoginPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="text-center mb-4">
-            <h1 className="text-4xl font-bold text-purple-600 mb-2">Who Am I?</h1>
-            <p className="text-muted-foreground">The Ultimate Party Game</p>
+            <h1 className="text-4xl font-bold text-purple-600 mb-2">{t('auth.title')}</h1>
+            <p className="text-muted-foreground">{t('auth.subtitle')}</p>
           </div>
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Play as Guest</CardTitle>
+              <CardTitle className="text-2xl">{t('auth.guest.title')}</CardTitle>
               <CardDescription>
-                Enter your name to join the fun - no account required!
+                {t('auth.guest.description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleGuestLogin}>
                 <div className="flex flex-col gap-6">
                   <div className="grid gap-2">
-                    <Label htmlFor="displayName">Your Name</Label>
+                    <Label htmlFor="displayName">{t('auth.guest.displayName')}</Label>
                     <Input
                       id="displayName"
                       type="text"
-                      placeholder="Enter your name"
+                      placeholder={t('auth.guest.displayNamePlaceholder')}
                       required
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
@@ -107,24 +109,24 @@ export default function GuestLoginPage() {
                       maxLength={30}
                     />
                     <p className="text-xs text-muted-foreground">
-                      This is how other players will see you (2-30 characters)
+                      {t('auth.guest.displayNameHint')}
                     </p>
                   </div>
                   {error && <p className="text-sm text-destructive">{error}</p>}
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Joining..." : "Join Game"}
+                    {isLoading ? t('auth.guest.loading') : t('auth.guest.button')}
                   </Button>
                   <div className="text-center text-xs text-muted-foreground">
-                    Guest accounts are temporary and will be deleted after your session ends
+                    {t('auth.guest.temporary')}
                   </div>
                 </div>
                 <div className="mt-4 text-center text-sm">
-                  Want to save your progress?{" "}
+                  {t('auth.guest.saveProgress')}{" "}
                   <Link
                     href="/auth/sign-up"
                     className="underline underline-offset-4 text-purple-600"
                   >
-                    Create an account
+                    {t('auth.guest.createAccount')}
                   </Link>
                 </div>
               </form>
@@ -135,7 +137,7 @@ export default function GuestLoginPage() {
               href="/auth/login"
               className="text-sm text-muted-foreground hover:text-purple-600 underline underline-offset-4"
             >
-              Already have an account? Login
+              {t('auth.guest.hasAccount')}
             </Link>
           </div>
         </div>

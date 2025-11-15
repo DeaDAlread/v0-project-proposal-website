@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trophy, Users, Calendar, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/language-context';
 
 type GameHistory = {
   id: string;
@@ -29,6 +30,7 @@ export default function GameHistoryPage() {
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -86,7 +88,7 @@ export default function GameHistoryPage() {
           <Button variant="ghost" asChild>
             <Link href="/game">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Lobbies
+              {t('history.backToLobbies')}
             </Link>
           </Button>
         </div>
@@ -94,7 +96,7 @@ export default function GameHistoryPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-primary">
-              Game History
+              {t('history.title')}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -102,7 +104,7 @@ export default function GameHistoryPage() {
         {games.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center text-muted-foreground">
-              No game history yet. Play some games to see them here!
+              {t('history.noHistory')}
             </CardContent>
           </Card>
         ) : (
@@ -114,9 +116,9 @@ export default function GameHistoryPage() {
                     <div className="flex items-center gap-2">
                       <Trophy className="w-5 h-5 text-yellow-500" />
                       <div>
-                        <h3 className="font-bold text-lg">{game.winner_name} Won!</h3>
+                        <h3 className="font-bold text-lg">{game.winner_name} {t('history.won')}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {game.winner_score} points
+                          {game.winner_score} {t('history.points')}
                         </p>
                       </div>
                     </div>
@@ -127,13 +129,13 @@ export default function GameHistoryPage() {
                       </div>
                       <div className="flex items-center gap-1 mt-1">
                         <Users className="w-4 h-4" />
-                        {game.player_count} players
+                        {game.player_count} {t('history.players')}
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-2 mt-4">
-                    <h4 className="text-sm font-semibold text-muted-foreground">Final Standings</h4>
+                    <h4 className="text-sm font-semibold text-muted-foreground">{t('history.finalStandings')}</h4>
                     {game.players.map((player, index) => (
                       <div
                         key={index}
@@ -143,14 +145,14 @@ export default function GameHistoryPage() {
                           <span className="font-semibold text-primary">#{player.placement}</span>
                           <span>{player.display_name}</span>
                         </div>
-                        <span className="font-medium">{player.final_score} pts</span>
+                        <span className="font-medium">{player.final_score} {t('history.pts')}</span>
                       </div>
                     ))}
                   </div>
 
                   <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm text-muted-foreground">
                     <span>{game.deck_name}</span>
-                    <span>{game.total_rounds} rounds</span>
+                    <span>{game.total_rounds} {t('history.rounds')}</span>
                   </div>
                 </CardContent>
               </Card>

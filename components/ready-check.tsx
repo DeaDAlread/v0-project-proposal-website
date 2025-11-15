@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { createBrowserClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, Circle } from 'lucide-react'
+import { useLanguage } from "@/lib/language-context"
 
 interface ReadyCheckProps {
   lobbyId: string
@@ -16,6 +17,7 @@ interface ReadyCheckProps {
 export function ReadyCheck({ lobbyId, userId, isHost, players, onAllReady }: ReadyCheckProps) {
   const [isReady, setIsReady] = useState(false)
   const supabase = createBrowserClient()
+  const { t } = useLanguage()
 
   useEffect(() => {
     const myPlayer = players.find(p => p.user_id === userId)
@@ -55,9 +57,9 @@ export function ReadyCheck({ lobbyId, userId, isHost, players, onAllReady }: Rea
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Ready Check</h3>
+        <h3 className="text-lg font-semibold">{t('ready.title')}</h3>
         <p className="text-sm text-muted-foreground">
-          {readyCount}/{players.length} Ready
+          {readyCount}/{players.length} {t('ready.count')}
         </p>
       </div>
 
@@ -69,12 +71,12 @@ export function ReadyCheck({ lobbyId, userId, isHost, players, onAllReady }: Rea
         {isReady ? (
           <>
             <CheckCircle2 className="mr-2 h-4 w-4" />
-            Ready!
+            {t('ready.ready')}
           </>
         ) : (
           <>
             <Circle className="mr-2 h-4 w-4" />
-            Click when Ready
+            {t('ready.clickReady')}
           </>
         )}
       </Button>
@@ -92,7 +94,7 @@ export function ReadyCheck({ lobbyId, userId, isHost, players, onAllReady }: Rea
             )}
             <span className="flex-1">{player.profiles?.display_name}</span>
             {player.user_id === userId && (
-              <span className="text-xs text-muted-foreground">(You)</span>
+              <span className="text-xs text-muted-foreground">({t('ready.you')})</span>
             )}
           </div>
         ))}
@@ -100,7 +102,7 @@ export function ReadyCheck({ lobbyId, userId, isHost, players, onAllReady }: Rea
 
       {isHost && !allPlayersReady && players.length >= 2 && (
         <p className="text-sm text-center text-yellow-600">
-          Waiting for all players to be ready...
+          {t('ready.waitingAll')}
         </p>
       )}
     </div>

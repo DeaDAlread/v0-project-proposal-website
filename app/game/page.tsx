@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import HowToPlayDialog from "@/components/how-to-play-dialog";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { useLanguage } from "@/lib/language-context";
 
 function GamePageContent() {
   const router = useRouter();
@@ -17,6 +18,7 @@ function GamePageContent() {
   const [profile, setProfile] = useState<any>(null);
   const [isGuest, setIsGuest] = useState(false);
   const supabase = createBrowserClient();
+  const { t } = useLanguage();
 
   useEffect(() => {
     console.log("[v0] GamePage: Starting authentication check");
@@ -105,27 +107,27 @@ function GamePageContent() {
       <div className="container mx-auto p-6">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-purple-600">Who Am I?</h1>
+            <h1 className="text-4xl font-bold text-purple-600">{t('home.title')}</h1>
             <p className="text-muted-foreground mt-1">
-              Welcome back, {profile?.display_name || user?.email}{isGuest ? " (Guest)" : ""}!
+              {t('home.welcome')}, {profile?.display_name || user?.email}{isGuest ? ` (${t('home.guest')})` : ""}!
             </p>
           </div>
           <div className="flex gap-2">
             <>
               <Button asChild variant="outline">
-                <Link href="/game/decks">My Decks</Link>
+                <Link href="/game/decks">{t('nav.myDecks')}</Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href="/game/leaderboard">Leaderboard</Link>
+                <Link href="/game/leaderboard">{t('nav.leaderboard')}</Link>
               </Button>
               {!isGuest && (
                 <Button asChild variant="outline">
-                  <Link href="/game/history">History</Link>
+                  <Link href="/game/history">{t('nav.history')}</Link>
                 </Button>
               )}
             </>
             <Button onClick={handleSignOut} variant="ghost">
-              {isGuest ? "Exit Game" : "Sign Out"}
+              {isGuest ? t('nav.exitGame') : t('nav.signOut')}
             </Button>
           </div>
         </header>

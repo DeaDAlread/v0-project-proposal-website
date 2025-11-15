@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PlusCircle, Lock } from 'lucide-react';
+import { useLanguage } from "@/lib/language-context";
 
 const DEFAULT_WORDS = [
   "Einstein", "Picasso", "Shakespeare", "Cleopatra", "Napoleon",
@@ -31,6 +32,7 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleCreateLobby = async () => {
     if (isPrivate && !password.trim()) {
@@ -128,21 +130,21 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-primary">
               <PlusCircle className="w-6 h-6" />
-              Create New Game
+              {t('create.title')}
             </CardTitle>
-            <CardDescription>Start a new lobby and invite friends</CardDescription>
+            <CardDescription>{t('create.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full">
-              Create Lobby
+              {t('create.button')}
             </Button>
           </CardContent>
         </Card>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Lobby</DialogTitle>
-          <DialogDescription>Choose your lobby settings</DialogDescription>
+          <DialogTitle>{t('create.dialogTitle')}</DialogTitle>
+          <DialogDescription>{t('create.dialogDescription')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {error && (
@@ -161,22 +163,22 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
                 />
                 <Label htmlFor="private" className="flex items-center gap-2 cursor-pointer">
                   <Lock className="w-4 h-4" />
-                  Private Lobby
+                  {t('create.private')}
                 </Label>
               </div>
 
               {isPrivate && (
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t('create.passwordLabel')}</Label>
                   <Input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter lobby password (min 4 characters)"
+                    placeholder={t('create.passwordPlaceholder')}
                   />
                   <p className="text-sm text-muted-foreground">
-                    Players will need this password to join
+                    {t('create.passwordHelp')}
                   </p>
                 </div>
               )}
@@ -188,7 +190,7 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
             disabled={isCreating}
             className="w-full"
           >
-            {isCreating ? "Creating..." : "Create Lobby"}
+            {isCreating ? t('create.creating') : t('create.button')}
           </Button>
         </div>
       </DialogContent>

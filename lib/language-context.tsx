@@ -1,0 +1,432 @@
+'use client';
+
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+type Language = 'en' | 'th';
+
+interface LanguageContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+const translations: Record<Language, Record<string, string>> = {
+  en: {
+    // Auth pages
+    'auth.title': 'Who Am I?',
+    'auth.subtitle': 'The Ultimate Party Game',
+    'auth.login.title': 'Login',
+    'auth.login.description': 'Enter your email below to login to your account',
+    'auth.login.email': 'Email',
+    'auth.login.password': 'Password',
+    'auth.login.remember': 'Stay signed in',
+    'auth.login.button': 'Login',
+    'auth.login.loading': 'Logging in...',
+    'auth.login.noAccount': "Don't have an account?",
+    'auth.login.signUp': 'Sign up',
+    'auth.login.or': 'Or',
+    'auth.login.guest': 'Play as Guest',
+    
+    'auth.signup.title': 'Sign up',
+    'auth.signup.subtitle': 'Join the Fun!',
+    'auth.signup.description': 'Create a new account',
+    'auth.signup.displayName': 'Display Name',
+    'auth.signup.displayNamePlaceholder': 'Your Name',
+    'auth.signup.email': 'Email',
+    'auth.signup.emailPlaceholder': 'm@example.com',
+    'auth.signup.password': 'Password',
+    'auth.signup.repeatPassword': 'Repeat Password',
+    'auth.signup.terms': 'I accept the',
+    'auth.signup.termsLink': 'Terms of Service and Privacy Policy',
+    'auth.signup.termsDisclaimer': '. I understand that this service is provided as-is and that the developers are not responsible for any data leaks or information shared through the platform.',
+    'auth.signup.button': 'Sign up',
+    'auth.signup.loading': 'Creating an account...',
+    'auth.signup.hasAccount': 'Already have an account?',
+    'auth.signup.login': 'Login',
+    
+    'auth.guest.title': 'Play as Guest',
+    'auth.guest.description': 'Enter your name to join the fun - no account required!',
+    'auth.guest.displayName': 'Your Name',
+    'auth.guest.displayNamePlaceholder': 'Enter your name',
+    'auth.guest.displayNameHint': 'This is how other players will see you (2-30 characters)',
+    'auth.guest.button': 'Join Game',
+    'auth.guest.loading': 'Joining...',
+    'auth.guest.temporary': 'Guest accounts are temporary and will be deleted after your session ends',
+    'auth.guest.saveProgress': 'Want to save your progress?',
+    'auth.guest.createAccount': 'Create an account',
+    'auth.guest.hasAccount': 'Already have an account? Login',
+    
+    // Game page translations
+    'game.title': 'Who Am I?',
+    'game.welcome': 'Welcome back',
+    'game.guest': 'Guest',
+    'nav.myDecks': 'My Decks',
+    'nav.leaderboard': 'Leaderboard',
+    'nav.history': 'History',
+    'nav.signOut': 'Sign Out',
+    'nav.exitGame': 'Exit Game',
+    
+    // Lobby translations
+    'lobby.noActive': 'No active lobbies. Create one to get started!',
+    'lobby.round': 'Round',
+    'lobby.players': 'players',
+    'lobby.joinGame': 'Join Game',
+    'lobby.delete': 'Delete',
+    'lobby.abandonedGame': 'Abandoned Game',
+    'lobby.game': "'s Game",
+    'lobby.privateTitle': 'Private Lobby',
+    'lobby.enterPassword': 'Enter the password to join',
+    'lobby.password': 'Password',
+    'lobby.join': 'Join',
+    
+    // Create lobby translations
+    'create.title': 'Create New Game',
+    'create.description': 'Start a new lobby and invite friends',
+    'create.button': 'Create Lobby',
+    'create.dialogTitle': 'Create New Lobby',
+    'create.dialogDescription': 'Choose your lobby settings',
+    'create.private': 'Private Lobby',
+    'create.passwordLabel': 'Password',
+    'create.passwordPlaceholder': 'Enter lobby password (min 4 characters)',
+    'create.passwordHelp': 'Players will need this password to join',
+    'create.creating': 'Creating...',
+    
+    // Room translations
+    'room.waiting': 'Waiting for Players...',
+    'room.lobbyCode': 'Lobby Code',
+    'room.deck': 'Deck',
+    'room.maxRounds': 'Max Rounds',
+    'room.settings': 'Settings',
+    'room.players': 'Players',
+    'room.you': 'You',
+    'room.startGame': 'Start Game',
+    'room.waitingMore': 'Waiting for more players...',
+    'room.waitingHost': 'Waiting for host to start the game...',
+    'room.leaveLobby': 'Leave Lobby',
+    'room.settingsTitle': 'Lobby Settings',
+    'room.settingsDescription': 'Customize your game settings before starting',
+    'room.cancel': 'Cancel',
+    'room.saveChanges': 'Save Changes',
+    'room.alertPlayers': 'You need at least 2 players to start the game!',
+    'room.alertReady': 'Please wait for all players to be ready!',
+    'room.alertStartGame': 'Failed to start game',
+    'room.alertSettings': 'Failed to update settings',
+    'room.startingGame': 'Starting game...',
+    'room.selectDeck': 'Select a deck',
+    'room.default': 'Default',
+    
+    // Ready check translations
+    'ready.title': 'Ready Check',
+    'ready.count': 'Ready',
+    'ready.ready': 'Ready!',
+    'ready.clickReady': 'Click when Ready',
+    'ready.you': 'You',
+    'ready.waitingAll': 'Waiting for all players to be ready...',
+    
+    // How to Play dialog translations
+    'howToPlay.title': 'How to Play "Who Am I?"',
+    'howToPlay.description': 'Welcome to the ultimate party guessing game! Here\'s everything you need to know.',
+    'howToPlay.objective.title': '🎯 Game Objective',
+    'howToPlay.objective.text': 'Guess the secret word before time runs out! The faster you guess correctly, the more points you earn.',
+    'howToPlay.howItWorks.title': '🎮 How It Works',
+    'howToPlay.step1': 'Create or join a lobby to start playing with friends',
+    'howToPlay.step2': 'Each round, one player gets a secret word that others must guess',
+    'howToPlay.step3': 'The player with the secret word answers questions from others',
+    'howToPlay.step4': 'Type your guesses in the chat - if you\'re correct, you earn points!',
+    'howToPlay.step5': 'The game automatically moves to the next round after a correct guess',
+    'howToPlay.scoring.title': '⏱️ Scoring System',
+    'howToPlay.scoring.text': 'Points are based on how quickly you guess correctly:',
+    'howToPlay.scoring.instant': 'Instant guess (60s remaining)',
+    'howToPlay.scoring.medium': 'Medium speed (30s remaining)',
+    'howToPlay.scoring.last': 'Last second (0s remaining)',
+    'howToPlay.scoring.note': 'Score decreases linearly as time runs out. Speed is rewarded!',
+    'howToPlay.customDecks.title': '🎨 Custom Decks',
+    'howToPlay.customDecks.text': 'Create your own word decks from "My Decks" menu! Add themed words for personalized gameplay. Each deck needs at least 5 words to be playable.',
+    'howToPlay.hostControls.title': '👥 Host Controls',
+    'howToPlay.hostControls.text': 'As the host, you can configure game settings, select decks, adjust round counts, and manually skip rounds if needed. All players can trigger round advances by guessing correctly.',
+    'howToPlay.proTips.title': '🏆 Pro Tips',
+    'howToPlay.tip1': 'Ask clever yes/no questions to narrow down possibilities',
+    'howToPlay.tip2': 'Watch the timer - guess quickly for maximum points!',
+    'howToPlay.tip3': 'Check the global leaderboard to see top players',
+    'howToPlay.tip4': 'Create custom decks with themes your friends will love',
+    'howToPlay.button': 'Got it! Let\'s Play!',
+    
+    // Decks page
+    'decks.backToLobbies': 'Back to Lobbies',
+    'decks.title': 'My Decks',
+    'decks.subtitle': 'Create and manage your custom word decks',
+    'decks.import': 'Import Deck',
+    'decks.create': 'Create New Deck',
+    'decks.createDescription': 'Add your own custom words for the game',
+    'decks.noDecks': 'No custom decks yet. Create your first deck to get started!',
+    'decks.words': 'words',
+    'decks.dialogTitle': 'Create Custom Deck',
+    'decks.dialogDescription': 'Add a name and words for your deck. Each word on a new line.',
+    'decks.nameLabel': 'Deck Name',
+    'decks.namePlaceholder': 'e.g., Famous Scientists',
+    'decks.wordsLabel': 'Words (one per line, minimum 5)',
+    'decks.wordsPlaceholder': 'Einstein\nNewton\nCurie\nDarwin\nTesla',
+    'decks.cancel': 'Cancel',
+    'decks.creating': 'Creating...',
+    'decks.createButton': 'Create Deck',
+    'decks.editTitle': 'Edit Deck',
+    'decks.editDescription': 'Update your deck name and words',
+    'decks.saving': 'Saving...',
+    'decks.saveButton': 'Save Changes',
+    'decks.importTitle': 'Import Custom Deck',
+    'decks.importDescription': 'Paste a deck code shared by another player to add it to your collection',
+    'decks.importCode': 'Deck Code',
+    'decks.importPlaceholder': 'Paste deck code here...',
+    'decks.importing': 'Importing...',
+    'decks.importButton': 'Import Deck',
+    'decks.exportTitle': 'Export Deck',
+    'decks.exportDescription': 'Share this code with others so they can import your deck',
+    'decks.close': 'Close',
+    'decks.copyCode': 'Copy Code',
+    'decks.copied': 'Copied!',
+    'decks.more': 'more',
+    
+    // History page
+    'history.backToLobbies': 'Back to Lobbies',
+    'history.title': 'Game History',
+    'history.noHistory': 'No game history yet. Play some games to see them here!',
+    'history.won': 'Won!',
+    'history.points': 'points',
+    'history.players': 'players',
+    'history.finalStandings': 'Final Standings',
+    'history.pts': 'pts',
+    'history.rounds': 'rounds',
+  },
+  th: {
+    // Auth pages
+    'auth.title': 'ฉันคือใคร?',
+    'auth.subtitle': 'เกมปาร์ตี้สุดมันส์',
+    'auth.login.title': 'เข้าสู่ระบบ',
+    'auth.login.description': 'กรอกอีเมลของคุณเพื่อเข้าสู่ระบบ',
+    'auth.login.email': 'อีเมล',
+    'auth.login.password': 'รหัสผ่าน',
+    'auth.login.remember': 'จำการเข้าสู่ระบบ',
+    'auth.login.button': 'เข้าสู่ระบบ',
+    'auth.login.loading': 'กำลังเข้าสู่ระบบ...',
+    'auth.login.noAccount': 'ยังไม่มีบัญชี?',
+    'auth.login.signUp': 'สมัครสมาชิก',
+    'auth.login.or': 'หรือ',
+    'auth.login.guest': 'เล่นแบบผู้เยี่ยมชม',
+    
+    'auth.signup.title': 'สมัครสมาชิก',
+    'auth.signup.subtitle': 'เข้าร่วมความสนุก!',
+    'auth.signup.description': 'สร้างบัญชีใหม่',
+    'auth.signup.displayName': 'ชื่อที่แสดง',
+    'auth.signup.displayNamePlaceholder': 'ชื่อของคุณ',
+    'auth.signup.email': 'อีเมล',
+    'auth.signup.emailPlaceholder': 'm@example.com',
+    'auth.signup.password': 'รหัสผ่าน',
+    'auth.signup.repeatPassword': 'ยืนยันรหัสผ่าน',
+    'auth.signup.terms': 'ฉันยอมรับ',
+    'auth.signup.termsLink': 'ข้อกำหนดการให้บริการและนโยบายความเป็นส่วนตัว',
+    'auth.signup.termsDisclaimer': ' ฉันเข้าใจว่าบริการนี้ให้บริการตามสภาพที่เป็นอยู่ และผู้พัฒนาไม่รับผิดชอบต่อข้อมูลรั่วไหลหรือข้อมูลที่แบ่งปันผ่านแพลตฟอร์ม',
+    'auth.signup.button': 'สมัครสมาชิก',
+    'auth.signup.loading': 'กำลังสร้างบัญชี...',
+    'auth.signup.hasAccount': 'มีบัญชีอยู่แล้ว?',
+    'auth.signup.login': 'เข้าสู่ระบบ',
+    
+    'auth.guest.title': 'เล่นแบบผู้เยี่ยมชม',
+    'auth.guest.description': 'กรอกชื่อของคุณเพื่อเข้าร่วมความสนุก - ไม่ต้องสร้างบัญชี!',
+    'auth.guest.displayName': 'ชื่อของคุณ',
+    'auth.guest.displayNamePlaceholder': 'กรอกชื่อของคุณ',
+    'auth.guest.displayNameHint': 'นี่คือชื่อที่ผู้เล่นคนอื่นจะเห็นคุณ (2-30 ตัวอักษร)',
+    'auth.guest.button': 'เข้าร่วมเกม',
+    'auth.guest.loading': 'กำลังเข้าร่วม...',
+    'auth.guest.temporary': 'บัญชีผู้เยี่ยมชมเป็นแบบชั่วคราวและจะถูกลบหลังจากเซสชันของคุณสิ้นสุด',
+    'auth.guest.saveProgress': 'ต้องการบันทึกความคืบหน้า?',
+    'auth.guest.createAccount': 'สร้างบัญชี',
+    'auth.guest.hasAccount': 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ',
+    
+    // Game page translations in Thai
+    'game.title': 'ฉันคือใคร?',
+    'game.welcome': 'ยินดีต้อนรับกลับมา',
+    'game.guest': 'แขก',
+    'nav.myDecks': 'เด็คของฉัน',
+    'nav.leaderboard': 'กระดานผู้นำ',
+    'nav.history': 'ประวัติ',
+    'nav.signOut': 'ออกจากระบบ',
+    'nav.exitGame': 'ออกจากเกม',
+    
+    // Lobby translations in Thai
+    'lobby.noActive': 'ไม่มีห้องที่เปิดอยู่ สร้างห้องใหม่เพื่อเริ่มเล่น!',
+    'lobby.round': 'รอบที่',
+    'lobby.players': 'ผู้เล่น',
+    'lobby.joinGame': 'เข้าร่วมเกม',
+    'lobby.delete': 'ลบ',
+    'lobby.abandonedGame': 'เกมที่ถูกทิ้ง',
+    'lobby.game': 'ของ',
+    'lobby.privateTitle': 'ห้องส่วนตัว',
+    'lobby.enterPassword': 'กรอกรหัสผ่านเพื่อเข้าร่วม',
+    'lobby.password': 'รหัสผ่าน',
+    'lobby.join': 'เข้าร่วม',
+    
+    // Create lobby translations in Thai
+    'create.title': 'สร้างเกมใหม่',
+    'create.description': 'สร้างห้องใหม่และเชิญเพื่อน',
+    'create.button': 'สร้างห้อง',
+    'create.dialogTitle': 'สร้างห้องใหม่',
+    'create.dialogDescription': 'เลือกการตั้งค่าห้อง',
+    'create.private': 'ห้องส่วนตัว',
+    'create.passwordLabel': 'รหัสผ่าน',
+    'create.passwordPlaceholder': 'กรอกรหัสผ่าน (อย่างน้อย 4 ตัวอักษร)',
+    'create.passwordHelp': 'ผู้เล่นจะต้องใช้รหัสผ่านนี้เพื่อเข้าร่วม',
+    'create.creating': 'กำลังสร้าง...',
+    
+    // Room translations in Thai
+    'room.waiting': 'กำลังรอผู้เล่น...',
+    'room.lobbyCode': 'รหัสห้อง',
+    'room.deck': 'เด็ค',
+    'room.maxRounds': 'รอบสูงสุด',
+    'room.settings': 'ตั้งค่า',
+    'room.players': 'ผู้เล่น',
+    'room.you': 'คุณ',
+    'room.startGame': 'เริ่มเกม',
+    'room.waitingMore': 'กำลังรอผู้เล่นเพิ่ม...',
+    'room.waitingHost': 'กำลังรอเจ้าของห้องเริ่มเกม...',
+    'room.leaveLobby': 'ออกจากห้อง',
+    'room.settingsTitle': 'ตั้งค่าห้อง',
+    'room.settingsDescription': 'ปรับแต่งการตั้งค่าก่อนเริ่มเกม',
+    'room.cancel': 'ยกเลิก',
+    'room.saveChanges': 'บันทึกการเปลี่ยนแปลง',
+    'room.alertPlayers': 'ต้องมีผู้เล่นอย่างน้อย 2 คนเพื่อเริ่มเกม!',
+    'room.alertReady': 'กรุณารอให้ผู้เล่นทุกคนพร้อม!',
+    'room.alertStartGame': 'เริ่มเกมล้มเหลว',
+    'room.alertSettings': 'อัพเดทการตั้งค่าล้มเหลว',
+    'room.startingGame': 'กำลังเริ่มเกม...',
+    'room.selectDeck': 'เลือกเด็ค',
+    'room.default': 'ค่าเริ่มต้น',
+    
+    // Ready check translations in Thai
+    'ready.title': 'เช็คความพร้อม',
+    'ready.count': 'พร้อม',
+    'ready.ready': 'พร้อม!',
+    'ready.clickReady': 'คลิกเมื่อพร้อม',
+    'ready.you': 'คุณ',
+    'ready.waitingAll': 'กำลังรอให้ผู้เล่นทุกคนพร้อม...',
+    
+    // How to Play translations in Thai
+    'howToPlay.title': 'วิธีเล่น "ฉันคือใคร?"',
+    'howToPlay.description': 'ยินดีต้อนรับสู่เกมเดาคำสุดมันส์! นี่คือทุกอย่างที่คุณต้องรู้',
+    'howToPlay.objective.title': '🎯 เป้าหมายของเกม',
+    'howToPlay.objective.text': 'เดาคำลับก่อนหมดเวลา! ยิ่งเดาถูกเร็วเท่าไหร่ ยิ่งได้คะแนนมากเท่านั้น',
+    'howToPlay.howItWorks.title': '🎮 วิธีการเล่น',
+    'howToPlay.step1': 'สร้างหรือเข้าร่วมห้องเพื่อเริ่มเล่นกับเพื่อน',
+    'howToPlay.step2': 'แต่ละรอบ ผู้เล่น 1 คนจะได้รับคำลับที่คนอื่นต้องเดา',
+    'howToPlay.step3': 'ผู้เล่นที่มีคำลับจะตอบคำถามจากคนอื่น',
+    'howToPlay.step4': 'พิมพ์คำตอบในแชท - ถ้าถูกต้องคุณจะได้คะแนน!',
+    'howToPlay.step5': 'เกมจะไปรอบถัดไปโดยอัตโนมัติเมื่อมีคนเดาถูก',
+    'howToPlay.scoring.title': '⏱️ ระบบคะแนน',
+    'howToPlay.scoring.text': 'คะแนนขึ้นอยู่กับความเร็วในการเดาถูก:',
+    'howToPlay.scoring.instant': 'เดาถูกทันที (เหลือ 60 วินาที)',
+    'howToPlay.scoring.medium': 'ความเร็วปานกลาง (เหลือ 30 วินาที)',
+    'howToPlay.scoring.last': 'วินาทีสุดท้าย (เหลือ 0 วินาที)',
+    'howToPlay.scoring.note': 'คะแนนจะลดลงเมื่อเวลาผ่านไป รีบเดาเพื่อคะแนนสูงสุด!',
+    'howToPlay.customDecks.title': '🎨 เด็คแบบกำหนดเอง',
+    'howToPlay.customDecks.text': 'สร้างเด็คคำศัพท์ของคุณเองจากเมนู "เด็คของฉัน"! เพิ่มคำตามธีมสำหรับเกมส์ที่เป็นส่วนตัว แต่ละเด็คต้องมีอย่างน้อย 5 คำเพื่อเล่นได้',
+    'howToPlay.hostControls.title': '👥 การควบคุมของเจ้าของห้อง',
+    'howToPlay.hostControls.text': 'ในฐานะเจ้าของห้อง คุณสามารถตั้งค่าเกม เลือกเด็ค ปรับจำนวนรอบ และข้ามรอบด้วยตนเองได้ ผู้เล่นทุกคนสามารถไปรอบถัดไปได้โดยการเดาถูก',
+    'howToPlay.proTips.title': '🏆 เคล็ดลับมือโปร',
+    'howToPlay.tip1': 'ถามคำถามใช่/ไม่ใช่อย่างชาญฉลาดเพื่อแคบความเป็นไปได้',
+    'howToPlay.tip2': 'จับตาดูนาฬิกา - เดาเร็วเพื่อคะแนนสูงสุด!',
+    'howToPlay.tip3': 'ตรวจสอบกระดานผู้นำเพื่อดูผู้เล่นอันดับต้น',
+    'howToPlay.tip4': 'สร้างเด็คแบบกำหนดเองตามธีมที่เพื่อนคุณชอบ',
+    'howToPlay.button': 'เข้าใจแล้ว! มาเล่นกัน!',
+    
+    // Decks page in Thai
+    'decks.backToLobbies': 'กลับไปห้องเกม',
+    'decks.title': 'เด็คของฉัน',
+    'decks.subtitle': 'สร้างและจัดการเด็คคำของคุณ',
+    'decks.import': 'นำเข้าเด็ค',
+    'decks.create': 'สร้างเด็คใหม่',
+    'decks.createDescription': 'เพิ่มคำที่คุณเองสำหรับเกม',
+    'decks.noDecks': 'ยังไม่มีเด็ค สร้างเด็คแรกของคุณเพื่อเริ่มต้น!',
+    'decks.words': 'คำ',
+    'decks.dialogTitle': 'สร้างเด็คแบบกำหนดเอง',
+    'decks.dialogDescription': 'เพิ่มชื่อและคำสำหรับเด็คของคุณ แต่ละคำต้องขึ้นบรรทัดใหม่',
+    'decks.nameLabel': 'ชื่อเด็ค',
+    'decks.namePlaceholder': 'เช่น นักวิทยาศาสตร์ที่มีชื่อเสียง',
+    'decks.wordsLabel': 'คำ (หนึ่งคำต่อบรรทัด อย่างน้อย 5 คำ)',
+    'decks.wordsPlaceholder': 'ไอน์สไตน์\nนิวตัน\nคูรี\nดาร์วิน\nเทสลา',
+    'decks.cancel': 'ยกเลิก',
+    'decks.creating': 'กำลังสร้าง...',
+    'decks.createButton': 'สร้างเด็ค',
+    'decks.editTitle': 'แก้ไขเด็ค',
+    'decks.editDescription': 'อัพเดทชื่อและคำในเด็ค',
+    'decks.saving': 'กำลังบันทึก...',
+    'decks.saveButton': 'บันทึกการเปลี่ยนแปลง',
+    'decks.importTitle': 'นำเข้าเด็คแบบกำหนดเอง',
+    'decks.importDescription': 'วางโค้ดเด็คที่ผู้เล่นคนอื่นแชร์ให้เพื่อเพิ่มลงในคอลเลคชันของคุณ',
+    'decks.importCode': 'โค้ดเด็ค',
+    'decks.importPlaceholder': 'วางโค้ดเด็คที่นี่...',
+    'decks.importing': 'กำลังนำเข้า...',
+    'decks.importButton': 'นำเข้าเด็ค',
+    'decks.exportTitle': 'ส่งออกเด็ค',
+    'decks.exportDescription': 'แชร์โค้ดนี้กับคนอื่นเพื่อให้พวกเขานำเข้าเด็คของคุณได้',
+    'decks.close': 'ปิด',
+    'decks.copyCode': 'คัดลอกโค้ด',
+    'decks.copied': 'คัดลอกแล้ว!',
+    'decks.more': 'เพิ่มเติม',
+    
+    // History page in Thai
+    'history.backToLobbies': 'กลับไปห้องเกม',
+    'history.title': 'ประวัติการเล่น',
+    'history.noHistory': 'ยังไม่มีประวัติการเล่น เล่นเกมเพื่อดูประวัติที่นี่!',
+    'history.won': 'ชนะ!',
+    'history.points': 'คะแนน',
+    'history.players': 'ผู้เล่น',
+    'history.finalStandings': 'อันดับสุดท้าย',
+    'history.pts': 'คะแนน',
+    'history.rounds': 'รอบ',
+    
+    // Leaderboard page in Thai
+    'leaderboard.backToLobbies': 'กลับไปห้องเกม',
+    'leaderboard.title': 'กระดานผู้นำ',
+    'leaderboard.subtitle': 'ผู้เล่นอันดับต้นตามจำนวนการชนะ',
+    'leaderboard.you': 'คุณ',
+    'leaderboard.wins': 'ชนะ',
+    'leaderboard.win': 'ชนะ',
+    'leaderboard.noEntries': 'ยังไม่มีผู้เล่นในกระดาน เป็นคนแรกที่ชนะ!',
+    'leaderboard.yourRank': 'อันดับปัจจุบันของคุณ:',
+  },
+};
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguageState] = useState<Language>('en');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('language') as Language;
+    if (saved && (saved === 'en' || saved === 'th')) {
+      setLanguageState(saved);
+    }
+  }, []);
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem('language', lang);
+  };
+
+  const t = (key: string): string => {
+    return translations[language][key] || key;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error('useLanguage must be used within LanguageProvider');
+  }
+  return context;
+}

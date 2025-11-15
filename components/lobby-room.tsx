@@ -32,6 +32,7 @@ import { Users, Settings, Crown, ArrowLeft, UserX } from 'lucide-react';
 import GameInterface from "@/components/game-interface";
 import { ReadyCheck } from "@/components/ready-check";
 import { LobbyChat } from "@/components/lobby-chat";
+import { useLanguage } from "@/lib/language-context";
 
 type Profile = {
   id: string;
@@ -82,6 +83,7 @@ export default function LobbyRoom({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useLanguage();
 
   const isHost = lobby.host_id === userId;
 
@@ -173,13 +175,13 @@ export default function LobbyRoom({
   const handleStartGame = async () => {
     if (!isHost) return;
     if (players.length < 2) {
-      alert("You need at least 2 players to start the game!");
+      alert(t('room.alertPlayers'));
       return;
     }
 
     const allReady = players.every(p => p.is_ready);
     if (!allReady) {
-      alert("Please wait for all players to be ready!");
+      alert(t('room.alertReady'));
       return;
     }
 
@@ -213,7 +215,7 @@ export default function LobbyRoom({
       }
     } catch (error) {
       console.error("[v0] Error starting game:", error);
-      alert("Failed to start game");
+      alert(t('room.alertStartGame'));
     }
   };
 
@@ -264,7 +266,7 @@ export default function LobbyRoom({
       setShowSettings(false);
     } catch (error) {
       console.error("[v0] Error updating settings:", error);
-      alert("Failed to update settings");
+      alert(t('room.alertSettings'));
     }
   };
 
@@ -300,7 +302,7 @@ export default function LobbyRoom({
       <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-lg font-semibold text-primary">Starting game...</p>
+          <p className="text-lg font-semibold text-primary">{t('room.startingGame')}</p>
         </div>
       </div>
     );
@@ -312,34 +314,34 @@ export default function LobbyRoom({
         <div className="mb-6">
           <Button variant="ghost" onClick={handleLeaveLobby}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Leave Lobby
+            {t('room.leaveLobby')}
           </Button>
         </div>
 
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-primary">
-              Waiting for Players...
+              {t('room.waiting')}
             </CardTitle>
             <CardDescription>
-              Lobby Code: {lobbyId.slice(0, 8).toUpperCase()}
+              {t('room.lobbyCode')}: {lobbyId.slice(0, 8).toUpperCase()}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg">
                 <div>
-                  <p className="text-sm text-muted-foreground">Deck</p>
+                  <p className="text-sm text-muted-foreground">{t('room.deck')}</p>
                   <p className="font-semibold">{lobby.deck_name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Max Rounds</p>
+                  <p className="text-sm text-muted-foreground">{t('room.maxRounds')}</p>
                   <p className="font-semibold">{lobby.max_rounds}</p>
                 </div>
                 {isHost && (
                   <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
                     <Settings className="w-4 h-4 mr-2" />
-                    Settings
+                    {t('room.settings')}
                   </Button>
                 )}
               </div>
@@ -353,7 +355,7 @@ export default function LobbyRoom({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  Players ({players.length})
+                  {t('room.players')} ({players.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -371,7 +373,7 @@ export default function LobbyRoom({
                           {player.profiles.display_name}
                         </span>
                         {player.user_id === userId && (
-                          <span className="text-xs text-foreground/70">(You)</span>
+                          <span className="text-xs text-foreground/70">({t('room.you')})</span>
                         )}
                       </div>
                       {isHost && player.user_id !== userId && (
@@ -405,14 +407,14 @@ export default function LobbyRoom({
                     disabled={players.length < 2}
                   >
                     {players.length < 2
-                      ? "Waiting for more players..."
-                      : "Start Game"}
+                      ? t('room.waitingMore')
+                      : t('room.startGame')}
                   </Button>
                 )}
 
                 {!isHost && (
                   <p className="text-center text-muted-foreground mt-6">
-                    Waiting for host to start the game...
+                    {t('room.waitingHost')}
                   </p>
                 )}
               </CardContent>
@@ -428,20 +430,20 @@ export default function LobbyRoom({
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Lobby Settings</DialogTitle>
+            <DialogTitle>{t('room.settingsTitle')}</DialogTitle>
             <DialogDescription>
-              Customize your game settings before starting
+              {t('room.settingsDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="deck">Deck</Label>
+              <Label htmlFor="deck">{t('room.deck')}</Label>
               <Select value={selectedDeck} onValueChange={setSelectedDeck}>
                 <SelectTrigger id="deck">
-                  <SelectValue placeholder="Select a deck" />
+                  <SelectValue placeholder={t('room.selectDeck')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Default">Default</SelectItem>
+                  <SelectItem value="Default">{t('room.default')}</SelectItem>
                   {customDecks.map((deck) => (
                     <SelectItem key={deck.id} value={deck.name}>
                       {deck.name}
@@ -451,7 +453,7 @@ export default function LobbyRoom({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="rounds">Max Rounds</Label>
+              <Label htmlFor="rounds">{t('room.maxRounds')}</Label>
               <Input
                 id="rounds"
                 type="number"
@@ -464,10 +466,10 @@ export default function LobbyRoom({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSettings(false)}>
-              Cancel
+              {t('room.cancel')}
             </Button>
             <Button onClick={handleUpdateSettings}>
-              Save Changes
+              {t('room.saveChanges')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -16,6 +16,7 @@ import { LobbyListSkeleton } from "@/components/loading-skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/lib/language-context";
 
 type Lobby = {
   id: string;
@@ -40,6 +41,7 @@ export default function LobbyList({ userId }: { userId: string }) {
   const [passwordInput, setPasswordInput] = useState("");
   const router = useRouter();
   const supabase = createClient();
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchLobbies();
@@ -194,7 +196,7 @@ export default function LobbyList({ userId }: { userId: string }) {
       <Card className="col-span-2">
         <CardContent className="p-6">
           <p className="text-center text-muted-foreground">
-            No active lobbies. Create one to get started!
+            {t('lobby.noActive')}
           </p>
         </CardContent>
       </Card>
@@ -211,17 +213,17 @@ export default function LobbyList({ userId }: { userId: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Crown className="w-5 h-5 text-yellow-500" />
-              {lobby.is_ghost ? "Abandoned Game" : `${lobby.profiles.display_name}'s Game`}
+              {lobby.is_ghost ? t('lobby.abandonedGame') : `${lobby.profiles.display_name}${t('lobby.game')}`}
             </CardTitle>
             <CardDescription>
-              Round {lobby.current_round}/{lobby.max_rounds} • {lobby.deck_name}
+              {t('lobby.round')} {lobby.current_round}/{lobby.max_rounds} • {lobby.deck_name}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Users className="w-4 h-4" />
-                <span>{lobby.player_count} players</span>
+                <span>{lobby.player_count} {t('lobby.players')}</span>
                 {lobby.password && (
                   <Lock className="w-4 h-4 text-purple-500 ml-2" />
                 )}
@@ -233,7 +235,7 @@ export default function LobbyList({ userId }: { userId: string }) {
                     size="sm"
                     variant="destructive"
                   >
-                    Delete
+                    {t('lobby.delete')}
                   </Button>
                 )}
                 <Button
@@ -241,7 +243,7 @@ export default function LobbyList({ userId }: { userId: string }) {
                   size="sm"
                   className="bg-pink-500 hover:bg-pink-600"
                 >
-                  Join Game
+                  {t('lobby.joinGame')}
                 </Button>
               </div>
             </div>
@@ -256,12 +258,12 @@ export default function LobbyList({ userId }: { userId: string }) {
         }}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Private Lobby</DialogTitle>
-              <DialogDescription>Enter the password to join</DialogDescription>
+              <DialogTitle>{t('lobby.privateTitle')}</DialogTitle>
+              <DialogDescription>{t('lobby.enterPassword')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="lobby-password">Password</Label>
+                <Label htmlFor="lobby-password">{t('lobby.password')}</Label>
                 <Input
                   id="lobby-password"
                   type="password"
@@ -280,7 +282,7 @@ export default function LobbyList({ userId }: { userId: string }) {
                 disabled={!passwordInput}
                 className="w-full bg-purple-600 hover:bg-purple-700"
               >
-                Join
+                {t('lobby.join')}
               </Button>
             </div>
           </DialogContent>

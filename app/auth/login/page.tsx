@@ -14,8 +14,10 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
+import { useLanguage } from '@/lib/language-context';
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -59,21 +61,21 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="text-center mb-4">
-            <h1 className="text-4xl font-bold text-purple-600 mb-2">Who Am I?</h1>
-            <p className="text-muted-foreground">The Ultimate Party Game</p>
+            <h1 className="text-4xl font-bold text-purple-600 mb-2">{t('auth.title')}</h1>
+            <p className="text-muted-foreground">{t('auth.subtitle')}</p>
           </div>
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Login</CardTitle>
+              <CardTitle className="text-2xl">{t('auth.login.title')}</CardTitle>
               <CardDescription>
-                Enter your email below to login to your account
+                {t('auth.login.description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin}>
                 <div className="flex flex-col gap-6">
                   <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t('auth.login.email')}</Label>
                     <Input
                       id="email"
                       type="email"
@@ -84,7 +86,7 @@ export default function LoginPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{t('auth.login.password')}</Label>
                     <Input
                       id="password"
                       type="password"
@@ -102,33 +104,32 @@ export default function LoginPage() {
                       className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                     />
                     <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
-                      Stay signed in
+                      {t('auth.login.remember')}
                     </Label>
                   </div>
 
-                  
                   {error && <p className="text-sm text-destructive">{error}</p>}
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Logging in..." : "Login"}
+                    {isLoading ? t('auth.login.loading') : t('auth.login.button')}
                   </Button>
                 </div>
                 <div className="mt-4 text-center text-sm">
-                  Don't have an account?{" "}
+                  {t('auth.login.noAccount')}{" "}
                   <Link
                     href="/auth/sign-up"
                     className="underline underline-offset-4 text-purple-600"
                   >
-                    Sign up
+                    {t('auth.login.signUp')}
                   </Link>
                 </div>
               </form>
             </CardContent>
           </Card>
           <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-3">Or</p>
+            <p className="text-sm text-muted-foreground mb-3">{t('auth.login.or')}</p>
             <Link href="/auth/guest">
               <Button variant="outline" className="w-full">
-                Play as Guest
+                {t('auth.login.guest')}
               </Button>
             </Link>
           </div>
