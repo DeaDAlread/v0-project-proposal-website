@@ -61,25 +61,23 @@ export function ReadyCheck({ lobbyId, userId, isHost, players, onAllReady }: Rea
         </p>
       </div>
 
-      {!isHost && (
-        <Button
-          onClick={handleToggleReady}
-          variant={isReady ? "default" : "outline"}
-          className="w-full"
-        >
-          {isReady ? (
-            <>
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Ready!
-            </>
-          ) : (
-            <>
-              <Circle className="mr-2 h-4 w-4" />
-              Click when Ready
-            </>
-          )}
-        </Button>
-      )}
+      <Button
+        onClick={handleToggleReady}
+        variant={isReady ? "default" : "outline"}
+        className="w-full"
+      >
+        {isReady ? (
+          <>
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            Ready!
+          </>
+        ) : (
+          <>
+            <Circle className="mr-2 h-4 w-4" />
+            Click when Ready
+          </>
+        )}
+      </Button>
 
       <div className="space-y-2">
         {players.map((player) => (
