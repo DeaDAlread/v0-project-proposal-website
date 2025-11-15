@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from '@/lib/supabase/client';
 
 export default function GuestLoginPage() {
   const [displayName, setDisplayName] = useState("");
@@ -39,37 +39,42 @@ export default function GuestLoginPage() {
     setError(null);
 
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = createClient();
 
-      // Insert guest profile into database
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          display_name: trimmedName,
-          is_guest: true,
-        })
-        .select('id')
-        .single();
-
-      if (profileError || !profileData) {
-        console.error("[v0] Failed to create guest profile:", profileError);
-        throw new Error("Failed to create guest profile");
+      console.log('[v0] Starting anonymous sign in...');
+      const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+      
+      if (authError) {
+        console.error('[v0] Anonymous auth error:', authError);
+        throw authError;
       }
 
-      console.log("[v0] Guest profile created:", profileData);
+      if (!authData.user) {
+        throw new Error('No user returned from anonymous authentication');
+      }
 
-      // Store guest session info in sessionStorage
-      const guestSession = {
-        id: profileData.id, // Use the UUID from the database
-        displayName: trimmedName,
-        isGuest: true,
-        createdAt: new Date().toISOString(),
-      };
-      
-      sessionStorage.setItem('guest_session', JSON.stringify(guestSession));
+      console.log('[v0] Anonymous user created with ID:', authData.user.id);
+
+      const guestEmail = `guest_${Date.now()}_${Math.random().toString(36).substring(7)}@guest.local`;
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id, // Use the authenticated user's UUID
+          display_name: trimmedName,
+          email: guestEmail,
+          is_guest: true,
+        });
+
+      if (profileError) {
+        console.error("[v0] Failed to create guest profile:", profileError);
+        throw new Error(profileError.message || "Failed to create guest profile");
+      }
+
+      console.log("[v0] Guest profile created successfully");
+
+      sessionStorage.setItem('isGuest', 'true');
+      sessionStorage.setItem('guestId', authData.user.id);
+      sessionStorage.setItem('guestName', trimmedName);
       
       // Redirect to game
       router.push("/game");
@@ -83,7 +88,7 @@ export default function GuestLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-6 bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50">
+    <div className="flex min-h-screen w-full items-center justify-center p-6 bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="text-center mb-4">
