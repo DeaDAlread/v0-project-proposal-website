@@ -435,7 +435,6 @@ export default function GameInterface({
     
     if (!isHost) {
       console.log("[v0] Not host, redirecting to results");
-      // Non-hosts should just navigate to results page
       router.push(`/game/results/${lobby.id}`);
       return;
     }
@@ -471,7 +470,6 @@ export default function GameInterface({
 
       console.log("[v0] Game history created:", gameHistory.id);
 
-      // Store all players' final scores
       const playerRecords = players.map((player, index) => ({
         game_id: gameHistory.id,
         user_id: player.user_id,
@@ -528,7 +526,6 @@ export default function GameInterface({
       router.push(`/game/results/${lobby.id}`);
     } catch (error) {
       console.error("[v0] Error ending game:", error);
-      // Even if there's an error, try to redirect
       router.push(`/game/results/${lobby.id}`);
     }
   };
@@ -740,11 +737,7 @@ export default function GameInterface({
       
       if (nextRound > lobby.max_rounds) {
         console.log("[v0] Last round complete via timer, ending game");
-        if (isHost) {
-          await handleEndGame();
-        } else {
-          router.push(`/game/results/${lobby.id}`);
-        }
+        await handleEndGame();
         return;
       }
 

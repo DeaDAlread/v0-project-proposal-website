@@ -22,6 +22,7 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.login.email': 'Email',
     'auth.login.password': 'Password',
     'auth.login.remember': 'Stay signed in',
+    'auth.login.forgotPassword': 'Forgot password?',
     'auth.login.button': 'Login',
     'auth.login.loading': 'Logging in...',
     'auth.login.noAccount': "Don't have an account?",
@@ -57,6 +58,14 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.guest.saveProgress': 'Want to save your progress?',
     'auth.guest.createAccount': 'Create an account',
     'auth.guest.hasAccount': 'Already have an account? Login',
+    
+    'auth.forgot.title': 'Reset Password',
+    'auth.forgot.description': 'Enter your email to receive a password reset link',
+    'auth.forgot.email': 'Email',
+    'auth.forgot.button': 'Send Reset Link',
+    'auth.forgot.sending': 'Sending...',
+    'auth.forgot.success': 'Password reset link sent! Check your email.',
+    'auth.forgot.backToLogin': 'Back to Login',
     
     // Game page translations
     'game.title': 'Who Am I?',
@@ -241,6 +250,7 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.login.email': 'อีเมล',
     'auth.login.password': 'รหัสผ่าน',
     'auth.login.remember': 'จำการเข้าสู่ระบบ',
+    'auth.login.forgotPassword': 'ลืมรหัสผ่าน?',
     'auth.login.button': 'เข้าสู่ระบบ',
     'auth.login.loading': 'กำลังเข้าสู่ระบบ...',
     'auth.login.noAccount': 'ยังไม่มีบัญชี?',
@@ -276,6 +286,14 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.guest.saveProgress': 'ต้องการบันทึกความคืบหน้า?',
     'auth.guest.createAccount': 'สร้างบัญชี',
     'auth.guest.hasAccount': 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ',
+    
+    'auth.forgot.title': 'รีเซ็ตรหัสผ่าน',
+    'auth.forgot.description': 'กรอกอีเมลเพื่อรับลิงก์รีเซ็ตรหัสผ่าน',
+    'auth.forgot.email': 'อีเมล',
+    'auth.forgot.button': 'ส่งลิงก์รีเซ็ต',
+    'auth.forgot.sending': 'กำลังส่ง...',
+    'auth.forgot.success': 'ส่งลิงก์รีเซ็ตรหัสผ่านแล้ว! ตรวจสอบอีเมลของคุณ',
+    'auth.forgot.backToLogin': 'กลับไปหน้าเข้าสู่ระบบ',
     
     // Game page translations in Thai
     'game.title': 'ฉันคือใคร?',

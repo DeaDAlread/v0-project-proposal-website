@@ -11,6 +11,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
@@ -23,6 +30,10 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -53,6 +64,29 @@ export default function LoginPage() {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+
+    const supabase = createClient();
+    setIsSendingReset(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) throw error;
+
+      setForgotSuccess(true);
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setIsSendingReset(false);
     }
   };
 
@@ -95,17 +129,26 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="remember"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
-                      {t('auth.login.remember')}
-                    </Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="remember"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                      />
+                      <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
+                        {t('auth.login.remember')}
+                      </Label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm text-purple-600 hover:underline underline-offset-4"
+                    >
+                      {t('auth.login.forgotPassword')}
+                    </button>
                   </div>
 
                   {error && <p className="text-sm text-destructive">{error}</p>}
@@ -135,6 +178,73 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('auth.forgot.title')}</DialogTitle>
+            <DialogDescription>{t('auth.forgot.description')}</DialogDescription>
+          </DialogHeader>
+
+          {forgotSuccess ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  {t('auth.forgot.success')}
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setForgotSuccess(false);
+                  setForgotEmail("");
+                }}
+                className="w-full"
+              >
+                {t('auth.forgot.backToLogin')}
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="forgot-email">{t('auth.forgot.email')}</Label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  placeholder="m@example.com"
+                  required
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                />
+              </div>
+
+              {error && <p className="text-sm text-destructive">{error}</p>}
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setForgotEmail("");
+                    setError(null);
+                  }}
+                  className="flex-1"
+                >
+                  {t('room.cancel')}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSendingReset}
+                  className="flex-1"
+                >
+                  {isSendingReset ? t('auth.forgot.sending') : t('auth.forgot.button')}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
