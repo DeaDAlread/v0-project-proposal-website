@@ -124,7 +124,7 @@ export default function SignUpPage() {
                       onChange={(e) => setRepeatPassword(e.target.value)}
                     />
                   </div>
-                  <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-start gap-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                     <Checkbox
                       id="terms"
                       checked={acceptedTerms}
@@ -134,13 +134,13 @@ export default function SignUpPage() {
                     />
                     <Label
                       htmlFor="terms"
-                      className="text-sm leading-relaxed cursor-pointer"
+                      className="text-sm leading-relaxed cursor-pointer text-yellow-900 dark:text-yellow-100"
                     >
                       I accept the{" "}
                       <Link
                         href="/terms"
                         target="_blank"
-                        className="text-purple-600 underline underline-offset-2 hover:text-purple-700 font-medium"
+                        className="text-purple-600 dark:text-purple-400 underline underline-offset-2 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
                       >
                         Terms of Service and Privacy Policy
                       </Link>
