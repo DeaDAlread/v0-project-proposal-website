@@ -111,19 +111,19 @@ function GamePageContent() {
             </p>
           </div>
           <div className="flex gap-2">
-            {!isGuest && (
-              <>
-                <Button asChild variant="outline">
-                  <Link href="/game/decks">My Decks</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/game/leaderboard">Leaderboard</Link>
-                </Button>
+            <>
+              <Button asChild variant="outline">
+                <Link href="/game/decks">My Decks</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/game/leaderboard">Leaderboard</Link>
+              </Button>
+              {!isGuest && (
                 <Button asChild variant="outline">
                   <Link href="/game/history">History</Link>
                 </Button>
-              </>
-            )}
+              )}
+            </>
             <Button onClick={handleSignOut} variant="ghost">
               {isGuest ? "Exit Game" : "Sign Out"}
             </Button>

@@ -35,15 +35,27 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
     const supabase = createClient();
 
     try {
+      const guestSessionStr = sessionStorage.getItem('guest_session');
+      const isGuest = !!guestSessionStr;
+      
+      let hostId = userId;
+
+      if (isGuest) {
+        const guestSession = JSON.parse(guestSessionStr || '{}');
+        // Use guest session ID as the host ID
+        hostId = guestSession.id;
+      }
+
       const { data: lobby, error: lobbyError } = await supabase
         .from("lobbies")
         .insert({
-          host_id: userId,
+          host_id: hostId,
           status: "waiting",
           deck_name: "Default Deck",
           deck_words: DEFAULT_WORDS,
           max_rounds: 5,
           password: isPrivate && password ? password : null,
+          is_guest_lobby: isGuest, // Track if this is a guest lobby
         })
         .select()
         .single();
@@ -54,7 +66,7 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
         .from("lobby_players")
         .insert({
           lobby_id: lobby.id,
-          user_id: userId,
+          user_id: hostId,
           score: 0,
         });
 
@@ -62,7 +74,7 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
 
       router.push(`/game/lobby/${lobby.id}`);
     } catch (error) {
-      console.error("Error creating lobby:", error);
+      console.error("[v0] Error creating lobby:", error);
       alert("Failed to create lobby");
     } finally {
       setIsCreating(false);
