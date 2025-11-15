@@ -282,6 +282,8 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.backToGame': 'Back to Game',
     'profile.emailVerificationSent': 'Verification email sent! Please check your email to confirm the new address.',
     'profile.imageUploadError': 'Please upload an image file (JPG, PNG, etc.)',
+    'profile.emailChangeNote': 'Changing your email will require verification via email',
+    'profile.profilePictureNotAvailable': 'Profile pictures are not available yet. Please run migration script 011_add_profile_picture.sql to enable this feature.',
   },
   th: {
     // Auth pages
@@ -552,6 +554,8 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.backToGame': 'กลับไปเกม',
     'profile.emailVerificationSent': 'ส่งอีเมลยืนยันแล้ว! กรุณาตรวจสอบอีเมลเพื่อยืนยันที่อยู่ใหม่',
     'profile.imageUploadError': 'กรุณาอัพโหลดไฟล์รูปภาพ (JPG, PNG, ฯลฯ)',
+    'profile.emailChangeNote': 'การเปลี่ยนอีเมลจะต้องมีการยืนยันผ่านอีเมล',
+    'profile.profilePictureNotAvailable': 'รูปโปรไฟล์ยังไม่สามารถใช้งานได้ กรุณารันสคริปต์ 011_add_profile_picture.sql เพื่อเปิดใช้งานฟีเจอร์นี้',
   },
 };
 

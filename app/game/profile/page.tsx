@@ -27,6 +27,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [profilePictureColumnExists, setProfilePictureColumnExists] = useState(true);
   
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -46,11 +47,25 @@ export default function ProfilePage() {
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('display_name, profile_picture')
         .eq('id', user.id)
         .single();
 
-      if (profile) {
+      if (profileError) {
+        if (profileError.message.includes('column') && profileError.message.includes('profile_picture')) {
+          setProfilePictureColumnExists(false);
+          // Fetch without profile_picture
+          const { data: fallbackProfile } = await supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('id', user.id)
+            .single();
+          
+          if (fallbackProfile) {
+            setDisplayName(fallbackProfile.display_name || '');
+          }
+        }
+      } else if (profile) {
         setDisplayName(profile.display_name || '');
         setProfilePicture(profile.profile_picture || null);
       }
@@ -70,6 +85,11 @@ export default function ProfilePage() {
       return;
     }
 
+    if (!profilePictureColumnExists) {
+      alert(t('profile.profilePictureNotAvailable'));
+      return;
+    }
+
     setUploadingImage(true);
 
     try {
@@ -77,21 +97,25 @@ export default function ProfilePage() {
         access: 'public',
       });
 
-      setProfilePicture(blob.url);
-
       const { error } = await supabase
         .from('profiles')
-        .update({ profile_picture: blob.url } as any)
+        .update({ profile_picture: blob.url })
         .eq('id', userId);
 
-      if (error && !error.message.includes('column') && !error.message.includes('profile_picture')) {
+      if (error) {
         throw error;
       }
 
+      setProfilePicture(blob.url);
       alert(t('profile.updateSuccess'));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading image:', error);
-      alert(t('profile.updateError'));
+      if (error?.message?.includes('column') && error?.message?.includes('profile_picture')) {
+        setProfilePictureColumnExists(false);
+        alert(t('profile.profilePictureNotAvailable'));
+      } else {
+        alert(t('profile.updateError'));
+      }
     } finally {
       setUploadingImage(false);
     }
@@ -117,9 +141,12 @@ export default function ProfilePage() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (email !== user?.email) {
-        const { error: authError } = await supabase.auth.updateUser({
-          email: email,
-        });
+        const { error: authError } = await supabase.auth.updateUser(
+          { email: email },
+          {
+            emailRedirectTo: `${window.location.origin}/game`,
+          }
+        );
 
         if (authError) throw authError;
 
@@ -210,6 +237,11 @@ export default function ProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>{t('profile.picture')}</CardTitle>
+              {!profilePictureColumnExists && (
+                <CardDescription className="text-amber-600">
+                  {t('profile.profilePictureNotAvailable')}
+                </CardDescription>
+              )}
             </CardHeader>
             <CardContent className="flex items-center gap-4">
               <Avatar className="h-24 w-24">
@@ -220,7 +252,11 @@ export default function ProfilePage() {
               </Avatar>
               <div>
                 <Label htmlFor="picture-upload" className="cursor-pointer">
-                  <Button type="button" disabled={uploadingImage} asChild>
+                  <Button 
+                    type="button" 
+                    disabled={uploadingImage || !profilePictureColumnExists} 
+                    asChild
+                  >
                     <span>
                       <Upload className="mr-2 h-4 w-4" />
                       {uploadingImage ? t('profile.uploading') : t('profile.changePicture')}
@@ -233,7 +269,7 @@ export default function ProfilePage() {
                   accept="image/*"
                   className="hidden"
                   onChange={handleImageUpload}
-                  disabled={uploadingImage}
+                  disabled={uploadingImage || !profilePictureColumnExists}
                 />
               </div>
             </CardContent>
@@ -263,6 +299,9 @@ export default function ProfilePage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                 />
+                <p className="text-xs text-muted-foreground">
+                  {t('profile.emailChangeNote')}
+                </p>
               </div>
               <Button onClick={handleSaveProfile} disabled={saving}>
                 {saving ? t('profile.saving') : t('profile.saveChanges')}
