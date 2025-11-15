@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
+import { createBrowserClient } from '@supabase/ssr';
 
 export default function GuestLoginPage() {
   const [displayName, setDisplayName] = useState("");
@@ -38,12 +39,31 @@ export default function GuestLoginPage() {
     setError(null);
 
     try {
-      // Create a unique guest ID
-      const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      // Insert guest profile into database
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          display_name: trimmedName,
+          is_guest: true,
+        })
+        .select('id')
+        .single();
+
+      if (profileError || !profileData) {
+        console.error("[v0] Failed to create guest profile:", profileError);
+        throw new Error("Failed to create guest profile");
+      }
+
+      console.log("[v0] Guest profile created:", profileData);
+
       // Store guest session info in sessionStorage
       const guestSession = {
-        id: guestId,
+        id: profileData.id, // Use the UUID from the database
         displayName: trimmedName,
         isGuest: true,
         createdAt: new Date().toISOString(),
