@@ -1,12 +1,12 @@
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-4xl font-bold text-purple-600 mb-6">Terms of Service & Privacy Policy</h1>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6">
+      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+        <h1 className="text-4xl font-bold text-purple-600 dark:text-purple-400 mb-6">Terms of Service & Privacy Policy</h1>
         <p className="text-sm text-muted-foreground mb-8">Last Updated: {new Date().toLocaleDateString()}</p>
         
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">1. Acceptance of Terms</h2>
+          <h2 className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-4">1. Acceptance of Terms</h2>
           <p className="text-muted-foreground leading-relaxed">
             By accessing and using "Who Am I?" (the "Service"), you accept and agree to be bound by the terms and 
             provision of this agreement. If you do not agree to these terms, please do not use this Service.
@@ -14,7 +14,7 @@ export default function TermsPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">2. Use of Service</h2>
+          <h2 className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-4">2. Use of Service</h2>
           <p className="text-muted-foreground leading-relaxed mb-3">
             This Service is provided for entertainment purposes only. You agree to use this Service in compliance with 
             all applicable laws and regulations.
@@ -26,7 +26,7 @@ export default function TermsPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">3. User-Generated Content</h2>
+          <h2 className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-4">3. User-Generated Content</h2>
           <p className="text-muted-foreground leading-relaxed mb-3">
             You are solely responsible for any content you create, share, or transmit through the Service, including 
             custom decks, chat messages, and game interactions.
@@ -58,7 +58,7 @@ export default function TermsPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">5. Data Collection & Privacy</h2>
+          <h2 className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-4">5. Data Collection & Privacy</h2>
           <p className="text-muted-foreground leading-relaxed mb-3">
             We collect and store the following information:
           </p>
@@ -77,7 +77,7 @@ export default function TermsPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">6. Security</h2>
+          <h2 className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-4">6. Security</h2>
           <p className="text-muted-foreground leading-relaxed mb-3">
             While we implement reasonable security measures to protect your data, no method of transmission over the 
             Internet is 100% secure. You use the Service at your own risk.
@@ -89,7 +89,7 @@ export default function TermsPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">7. Prohibited Activities</h2>
+          <h2 className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-4">7. Prohibited Activities</h2>
           <p className="text-muted-foreground leading-relaxed mb-3">You agree not to:</p>
           <ul className="list-disc list-inside text-muted-foreground leading-relaxed ml-4">
             <li>Attempt to gain unauthorized access to the Service or other users' accounts</li>
@@ -102,7 +102,7 @@ export default function TermsPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">8. Termination</h2>
+          <h2 className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-4">8. Termination</h2>
           <p className="text-muted-foreground leading-relaxed">
             We reserve the right to terminate or suspend your account and access to the Service at our sole discretion, 
             without notice, for conduct that we believe violates these Terms or is harmful to other users or the Service.
@@ -110,7 +110,7 @@ export default function TermsPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">9. Changes to Terms</h2>
+          <h2 className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-4">9. Changes to Terms</h2>
           <p className="text-muted-foreground leading-relaxed">
             We reserve the right to modify these Terms at any time. Continued use of the Service after changes 
             constitutes acceptance of the modified Terms.
@@ -118,16 +118,29 @@ export default function TermsPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">10. Age Requirements</h2>
+          <h2 className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-4">10. Age Requirements</h2>
           <p className="text-muted-foreground leading-relaxed">
             You must be at least 13 years old to use this Service. Users under 18 should have parental consent.
           </p>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold text-purple-600 mb-4">11. Contact</h2>
-          <p className="text-muted-foreground leading-relaxed">
-            If you have any questions about these Terms, please contact the development team at your institution.
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold text-purple-600 dark:text-purple-400 mb-4">11. Contact</h2>
+          <p className="text-muted-foreground leading-relaxed mb-3">
+            If you have any questions, concerns, or feedback about these Terms of Service, Privacy Policy, or the Service itself, please contact the developer:
+          </p>
+          <div className="bg-purple-50 dark:bg-gray-700 p-4 rounded-lg">
+            <p className="text-muted-foreground">
+              <strong>Developer Contact:</strong>
+            </p>
+            <p className="text-purple-600 dark:text-purple-400 font-medium">
+              <a href="mailto:jakkritf88@gmail.com" className="hover:underline">
+                jakkritf88@gmail.com
+              </a>
+            </p>
+          </div>
+          <p className="text-muted-foreground leading-relaxed mt-3">
+            For account deletion requests, data privacy inquiries, or technical support, please email the address above.
           </p>
         </section>
 
