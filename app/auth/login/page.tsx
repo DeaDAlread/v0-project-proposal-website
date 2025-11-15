@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
+import { HCaptchaWidget } from "@/components/hcaptcha-widget";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -21,10 +22,17 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!captchaToken) {
+      setError("Please complete the CAPTCHA verification");
+      return;
+    }
+
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
@@ -47,6 +55,7 @@ export default function LoginPage() {
       router.refresh();
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
+      setCaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -103,8 +112,14 @@ export default function LoginPage() {
                       Stay signed in
                     </Label>
                   </div>
+                  
+                  <HCaptchaWidget 
+                    onVerify={setCaptchaToken}
+                    onExpire={() => setCaptchaToken(null)}
+                  />
+                  
                   {error && <p className="text-sm text-destructive">{error}</p>}
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full" disabled={isLoading || !captchaToken}>
                     {isLoading ? "Logging in..." : "Login"}
                   </Button>
                 </div>

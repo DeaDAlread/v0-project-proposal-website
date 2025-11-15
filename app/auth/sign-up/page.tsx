@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
+import { HCaptchaWidget } from "@/components/hcaptcha-widget";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -24,6 +25,7 @@ export default function SignUpPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -34,6 +36,12 @@ export default function SignUpPage() {
 
     if (!acceptedTerms) {
       setError("You must accept the Terms of Service and Privacy Policy to continue");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!captchaToken) {
+      setError("Please complete the CAPTCHA verification");
       setIsLoading(false);
       return;
     }
@@ -61,6 +69,7 @@ export default function SignUpPage() {
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
+      setCaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -146,11 +155,17 @@ export default function SignUpPage() {
                       . I understand that this service is provided as-is and that the developers are not responsible for any data leaks or information shared through the platform.
                     </Label>
                   </div>
+
+                  <HCaptchaWidget 
+                    onVerify={setCaptchaToken}
+                    onExpire={() => setCaptchaToken(null)}
+                  />
+
                   {error && <p className="text-sm text-destructive">{error}</p>}
                   <Button 
                     type="submit" 
                     className="w-full bg-purple-600 hover:bg-purple-700" 
-                    disabled={isLoading || !acceptedTerms}
+                    disabled={isLoading || !acceptedTerms || !captchaToken}
                   >
                     {isLoading ? "Creating an account..." : "Sign up"}
                   </Button>
