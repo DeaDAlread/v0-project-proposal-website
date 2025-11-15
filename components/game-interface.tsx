@@ -372,6 +372,8 @@ export default function GameInterface({
     if (isAdvancingRef.current) return;
     if (!isHost && !showNonHostNext) return;
     
+    console.log("[v0] handleNextRound called, current round:", lobby.current_round, "max rounds:", lobby.max_rounds);
+    
     isAdvancingRef.current = true;
     setShowNonHostNext(false);
     timerExpiredAtRef.current = null;
@@ -380,8 +382,11 @@ export default function GameInterface({
       const nextRound = lobby.current_round + 1;
       
       if (nextRound > lobby.max_rounds) {
+        console.log("[v0] Game complete, ending game");
         if (isHost) {
           await handleEndGame();
+        } else {
+          router.push(`/game/results/${lobby.id}`);
         }
         return;
       }
@@ -417,7 +422,7 @@ export default function GameInterface({
 
       if (error) throw error;
     } catch (error) {
-      console.error("Error starting next round:", error);
+      console.error("[v0] Error starting next round:", error);
     } finally {
       setTimeout(() => {
         isAdvancingRef.current = false;
@@ -426,12 +431,23 @@ export default function GameInterface({
   };
 
   const handleEndGame = async () => {
-    if (!isHost) return;
+    console.log("[v0] handleEndGame called, isHost:", isHost);
+    
+    if (!isHost) {
+      console.log("[v0] Not host, redirecting to results");
+      // Non-hosts should just navigate to results page
+      router.push(`/game/results/${lobby.id}`);
+      return;
+    }
 
     try {
+      console.log("[v0] Host ending game, players:", players);
+      
       const winner = players.reduce((prev, current) =>
         prev.score > current.score ? prev : current
       );
+
+      console.log("[v0] Winner determined:", winner.profiles.display_name, winner.score);
 
       const { data: gameHistory, error: historyError } = await supabase
         .from('game_history')
@@ -448,7 +464,12 @@ export default function GameInterface({
         .select()
         .single();
 
-      if (historyError) throw historyError;
+      if (historyError) {
+        console.error("[v0] Game history error:", historyError);
+        throw historyError;
+      }
+
+      console.log("[v0] Game history created:", gameHistory.id);
 
       // Store all players' final scores
       const playerRecords = players.map((player, index) => ({
@@ -459,9 +480,13 @@ export default function GameInterface({
         placement: index + 1,
       }));
 
-      await supabase
+      const { error: playersError } = await supabase
         .from('game_history_players')
         .insert(playerRecords);
+
+      if (playersError) {
+        console.error("[v0] Player records error:", playersError);
+      }
 
       const { data: leaderboardEntry } = await supabase
         .from("leaderboard")
@@ -487,14 +512,24 @@ export default function GameInterface({
           });
       }
 
-      await supabase
+      console.log("[v0] Updating lobby status to finished");
+
+      const { error: lobbyError } = await supabase
         .from("lobbies")
         .update({ status: "finished" })
         .eq("id", lobby.id);
 
+      if (lobbyError) {
+        console.error("[v0] Lobby update error:", lobbyError);
+        throw lobbyError;
+      }
+
+      console.log("[v0] Game ended successfully, redirecting to results");
       router.push(`/game/results/${lobby.id}`);
     } catch (error) {
-      console.error("Error ending game:", error);
+      console.error("[v0] Error ending game:", error);
+      // Even if there's an error, try to redirect
+      router.push(`/game/results/${lobby.id}`);
     }
   };
 
@@ -698,12 +733,17 @@ export default function GameInterface({
   const handleNextRoundTimerExpired = async () => {
     if (isAdvancingRef.current) return;
 
+    console.log("[v0] Timer expired, current round:", lobby.current_round, "max rounds:", lobby.max_rounds);
+
     try {
       const nextRound = lobby.current_round + 1;
       
       if (nextRound > lobby.max_rounds) {
+        console.log("[v0] Last round complete via timer, ending game");
         if (isHost) {
           await handleEndGame();
+        } else {
+          router.push(`/game/results/${lobby.id}`);
         }
         return;
       }
@@ -741,7 +781,7 @@ export default function GameInterface({
         throw error;
       }
     } catch (error) {
-      console.error("Error in handleNextRoundTimerExpired:", error);
+      console.error("[v0] Error in handleNextRoundTimerExpired:", error);
     }
   };
 
