@@ -43,19 +43,25 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
       return;
     }
 
+    if (isGuest && isPrivate) {
+      setError("Guest users cannot create private lobbies");
+      return;
+    }
+
     setIsCreating(true);
     setError(null);
     const supabase = createClient();
 
     try {
       const guestSessionStr = sessionStorage.getItem('guest_session');
-      const isGuestUser = !!guestSessionStr;
+      const isGuestUser = isGuest || !!guestSessionStr;
       
       let hostId = userId;
 
-      if (isGuestUser) {
-        const guestSession = JSON.parse(guestSessionStr || '{}');
+      if (isGuestUser && guestSessionStr) {
+        const guestSession = JSON.parse(guestSessionStr);
         hostId = guestSession.id;
+        console.log("[v0] Guest user creating lobby with ID:", hostId);
       }
 
       const lobbyData: any = {
@@ -72,6 +78,8 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
         lobbyData.password = password.trim();
       }
 
+      console.log("[v0] Creating lobby with data:", { ...lobbyData, password: lobbyData.password ? '***' : undefined });
+
       const { data: lobby, error: lobbyError } = await supabase
         .from("lobbies")
         .insert(lobbyData)
@@ -82,6 +90,8 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
         console.error("[v0] Lobby creation error:", lobbyError);
         throw new Error(lobbyError.message || "Failed to create lobby");
       }
+
+      console.log("[v0] Lobby created successfully:", lobby.id);
 
       const { error: playerError } = await supabase
         .from("lobby_players")
@@ -96,6 +106,8 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
         await supabase.from("lobbies").delete().eq("id", lobby.id);
         throw new Error(playerError.message || "Failed to join lobby");
       }
+
+      console.log("[v0] Player added to lobby successfully");
 
       setDialogOpen(false);
       setPassword("");
