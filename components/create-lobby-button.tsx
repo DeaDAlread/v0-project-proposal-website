@@ -28,10 +28,12 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleCreateLobby = async () => {
     setIsCreating(true);
+    setError(null);
     const supabase = createClient();
 
     try {
@@ -42,7 +44,6 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
 
       if (isGuest) {
         const guestSession = JSON.parse(guestSessionStr || '{}');
-        // Use guest session ID as the host ID
         hostId = guestSession.id;
       }
 
@@ -54,13 +55,16 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
           deck_name: "Default Deck",
           deck_words: DEFAULT_WORDS,
           max_rounds: 5,
-          password: isPrivate && password ? password : null,
-          is_guest_lobby: isGuest, // Track if this is a guest lobby
+          current_round: 0,
+          round_duration: 60,
         })
         .select()
         .single();
 
-      if (lobbyError) throw lobbyError;
+      if (lobbyError) {
+        console.error("[v0] Lobby creation error:", lobbyError);
+        throw new Error(lobbyError.message || "Failed to create lobby");
+      }
 
       const { error: playerError } = await supabase
         .from("lobby_players")
@@ -70,15 +74,18 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
           score: 0,
         });
 
-      if (playerError) throw playerError;
+      if (playerError) {
+        console.error("[v0] Player insertion error:", playerError);
+        throw new Error(playerError.message || "Failed to join lobby");
+      }
 
+      console.log("[v0] Lobby created successfully:", lobby.id);
       router.push(`/game/lobby/${lobby.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Error creating lobby:", error);
-      alert("Failed to create lobby");
+      setError(error.message || "Failed to create lobby");
     } finally {
       setIsCreating(false);
-      setDialogOpen(false);
     }
   };
 
@@ -106,40 +113,15 @@ export default function CreateLobbyButton({ userId }: { userId: string }) {
           <DialogDescription>Choose your lobby settings</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="private"
-              checked={isPrivate}
-              onChange={(e) => setIsPrivate(e.target.checked)}
-              className="w-4 h-4"
-            />
-            <Label htmlFor="private" className="flex items-center gap-2">
-              <Lock className="w-4 h-4" />
-              Private Lobby
-            </Label>
-          </div>
-          
-          {isPrivate && (
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter lobby password"
-                maxLength={20}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Players will need this password to join
-              </p>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
             </div>
           )}
 
           <Button
             onClick={handleCreateLobby}
-            disabled={isCreating || (isPrivate && !password)}
+            disabled={isCreating}
             className="w-full bg-purple-600 hover:bg-purple-700"
           >
             {isCreating ? "Creating..." : "Create Lobby"}
