@@ -66,6 +66,21 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.forgot.sending': 'Sending...',
     'auth.forgot.success': 'Password reset link sent! Check your email.',
     'auth.forgot.backToLogin': 'Back to Login',
+    'auth.forgot.emailNotFound': 'No account found with this email address',
+    'auth.forgot.checkingEmail': 'Checking email...',
+    
+    'auth.reset.title': 'Reset Your Password',
+    'auth.reset.description': 'Enter your new password below',
+    'auth.reset.newPassword': 'New Password',
+    'auth.reset.confirmPassword': 'Confirm New Password',
+    'auth.reset.button': 'Reset Password',
+    'auth.reset.resetting': 'Resetting...',
+    'auth.reset.success': 'Password reset successfully! Redirecting to login...',
+    'auth.reset.redirecting': 'Redirecting to login page...',
+    'auth.reset.passwordMismatch': 'Passwords do not match',
+    'auth.reset.passwordTooShort': 'Password must be at least 6 characters',
+    'auth.reset.invalidToken': 'Invalid or expired reset link. Please request a new one.',
+    'auth.reset.checking': 'Verifying reset link...',
     
     // Game page translations
     'game.title': 'Who Am I?',
@@ -294,6 +309,21 @@ const translations: Record<Language, Record<string, string>> = {
     'auth.forgot.sending': 'กำลังส่ง...',
     'auth.forgot.success': 'ส่งลิงก์รีเซ็ตรหัสผ่านแล้ว! ตรวจสอบอีเมลของคุณ',
     'auth.forgot.backToLogin': 'กลับไปหน้าเข้าสู่ระบบ',
+    'auth.forgot.emailNotFound': 'ไม่พบบัญชีที่มีอีเมลนี้',
+    'auth.forgot.checkingEmail': 'กำลังตรวจสอบอีเมล...',
+    
+    'auth.reset.title': 'รีเซ็ตรหัสผ่านของคุณ',
+    'auth.reset.description': 'กรอกรหัสผ่านใหม่ด้านล่าง',
+    'auth.reset.newPassword': 'รหัสผ่านใหม่',
+    'auth.reset.confirmPassword': 'ยืนยันรหัสผ่านใหม่',
+    'auth.reset.button': 'รีเซ็ตรหัสผ่าน',
+    'auth.reset.resetting': 'กำลังรีเซ็ต...',
+    'auth.reset.success': 'รีเซ็ตรหัสผ่านสำเร็จ! กำลังนำไปหน้าเข้าสู่ระบบ...',
+    'auth.reset.redirecting': 'กำลังนำไปหน้าเข้าสู่ระบบ...',
+    'auth.reset.passwordMismatch': 'รหัสผ่านไม่ตรงกัน',
+    'auth.reset.passwordTooShort': 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
+    'auth.reset.invalidToken': 'ลิงก์รีเซ็ตไม่ถูกต้องหรือหมดอายุ กรุณาขอลิงก์ใหม่',
+    'auth.reset.checking': 'กำลังตรวจสอบลิงก์รีเซ็ต...',
     
     // Game page translations in Thai
     'game.title': 'ฉันคือใคร?',

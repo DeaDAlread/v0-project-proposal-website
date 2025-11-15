@@ -76,6 +76,21 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', forgotEmail.trim())
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      if (!profiles) {
+        setError(t('auth.forgot.emailNotFound'));
+        setIsSendingReset(false);
+        return;
+      }
+
+      // Email exists, proceed with sending reset link
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
