@@ -40,30 +40,23 @@ export default function GuestLoginPage() {
     setError(null);
 
     try {
-      const guestId = Math.random().toString(36).substring(2, 15);
-      const guestEmail = `guest_${guestId}@temp-guest.example.com`;
-      const guestPassword = Math.random().toString(36).substring(2, 20);
-
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: guestEmail,
-        password: guestPassword,
+      const { data: authData, error: signInError } = await supabase.auth.signInAnonymously({
         options: {
           data: {
             display_name: trimmedName,
             is_guest: true,
-          },
-          emailRedirectTo: window.location.origin,
+          }
         }
       });
 
-      if (signUpError) throw signUpError;
+      if (signInError) throw signInError;
 
       if (authData.user) {
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
             id: authData.user.id,
-            email: guestEmail,
+            email: `guest_${authData.user.id}@anonymous.local`,
             display_name: trimmedName,
             is_guest: true,
           }, {
@@ -71,13 +64,6 @@ export default function GuestLoginPage() {
           });
 
         if (profileError) throw profileError;
-
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: guestEmail,
-          password: guestPassword,
-        });
-
-        if (signInError) throw signInError;
 
         sessionStorage.setItem('guest_session', 'true');
         
