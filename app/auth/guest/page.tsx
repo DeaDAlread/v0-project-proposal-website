@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,41 +34,26 @@ export default function GuestLoginPage() {
       return;
     }
 
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
     try {
-      const { data: authData, error: signInError } = await supabase.auth.signInAnonymously({
-        options: {
-          data: {
-            display_name: trimmedName,
-            is_guest: true,
-          }
-        }
-      });
-
-      if (signInError) throw signInError;
-
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: authData.user.id,
-            email: `guest_${authData.user.id}@anonymous.local`,
-            display_name: trimmedName,
-            is_guest: true,
-          }, {
-            onConflict: 'id'
-          });
-
-        if (profileError) throw profileError;
-
-        sessionStorage.setItem('guest_session', 'true');
-        
-        router.push("/game");
-        router.refresh();
-      }
+      // Create a unique guest ID
+      const guestId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Store guest session info in sessionStorage
+      const guestSession = {
+        id: guestId,
+        displayName: trimmedName,
+        isGuest: true,
+        createdAt: new Date().toISOString(),
+      };
+      
+      sessionStorage.setItem('guest_session', JSON.stringify(guestSession));
+      
+      // Redirect to game
+      router.push("/game");
+      router.refresh();
     } catch (error: unknown) {
       console.error("Guest login error:", error);
       setError(error instanceof Error ? error.message : "An error occurred");
