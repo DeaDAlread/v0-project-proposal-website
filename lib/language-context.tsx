@@ -198,6 +198,11 @@ const translations: Record<Language, Record<string, string>> = {
     'history.finalStandings': 'Final Standings',
     'history.pts': 'pts',
     'history.rounds': 'rounds',
+    
+    // Home page translations
+    'home.title': 'Who Am I?',
+    'home.welcome': 'Welcome back',
+    'home.guest': 'Guest',
   },
   th: {
     // Auth pages
@@ -394,6 +399,11 @@ const translations: Record<Language, Record<string, string>> = {
     'leaderboard.win': 'ชนะ',
     'leaderboard.noEntries': 'ยังไม่มีผู้เล่นในกระดาน เป็นคนแรกที่ชนะ!',
     'leaderboard.yourRank': 'อันดับปัจจุบันของคุณ:',
+    
+    // Home page translations in Thai
+    'home.title': 'ฉันคือใคร?',
+    'home.welcome': 'ยินดีต้อนรับกลับมา',
+    'home.guest': 'แขก',
   },
 };
 
