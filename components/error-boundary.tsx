@@ -36,10 +36,10 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 flex items-center justify-center p-6">
+        <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] flex items-center justify-center p-6">
           <Card className="max-w-md w-full">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-600">
+              <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
                 <AlertTriangle className="w-5 h-5" />
                 Something went wrong
               </CardTitle>
@@ -51,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
               {this.state.error && (
                 <details className="text-xs text-muted-foreground">
                   <summary className="cursor-pointer font-medium">Error details</summary>
-                  <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto">
+                  <pre className="mt-2 p-2 bg-muted rounded overflow-auto">
                     {this.state.error.toString()}
                   </pre>
                 </details>

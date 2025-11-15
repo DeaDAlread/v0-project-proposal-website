@@ -34,7 +34,7 @@ export default async function ProfilePage() {
     : "0.0";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
+    <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] p-6">
       <div className="container mx-auto max-w-4xl">
         <div className="mb-6">
           <Button asChild variant="ghost">
@@ -47,7 +47,7 @@ export default async function ProfilePage() {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-purple-600">
+            <CardTitle className="text-3xl font-bold text-primary">
               {profile.display_name}
             </CardTitle>
             <CardDescription>{profile.email}</CardDescription>
@@ -63,7 +63,7 @@ export default async function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-600">
+              <div className="text-3xl font-bold text-primary">
                 {profile.total_wins || 0}
               </div>
             </CardContent>
@@ -77,7 +77,7 @@ export default async function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-600">
+              <div className="text-3xl font-bold text-primary">
                 {profile.total_games || 0}
               </div>
             </CardContent>
@@ -91,7 +91,7 @@ export default async function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-600">
+              <div className="text-3xl font-bold text-primary">
                 {winRate}%
               </div>
             </CardContent>
@@ -105,7 +105,7 @@ export default async function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-600">
+              <div className="text-3xl font-bold text-primary">
                 {profile.average_score?.toFixed(1) || "0.0"}
               </div>
             </CardContent>
@@ -121,7 +121,7 @@ export default async function ProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-2xl font-bold text-primary">
                 {profile.fastest_guess_time}s
               </div>
             </CardContent>

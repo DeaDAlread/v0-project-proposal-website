@@ -20,7 +20,7 @@ export function LobbyListSkeleton() {
 
 export function GameLoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
+    <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] p-6">
       <div className="container mx-auto max-w-6xl">
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2 space-y-6">

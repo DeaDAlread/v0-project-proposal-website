@@ -297,17 +297,17 @@ export default function LobbyRoom({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-lg font-semibold text-purple-600">Starting game...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg font-semibold text-primary">Starting game...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
+    <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] p-6">
       <div className="container mx-auto max-w-4xl">
         <div className="mb-6">
           <Button variant="ghost" onClick={handleLeaveLobby}>
@@ -318,7 +318,7 @@ export default function LobbyRoom({
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-purple-600">
+            <CardTitle className="text-3xl font-bold text-primary">
               Waiting for Players...
             </CardTitle>
             <CardDescription>
@@ -327,7 +327,7 @@ export default function LobbyRoom({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-purple-100 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg">
                 <div>
                   <p className="text-sm text-muted-foreground">Deck</p>
                   <p className="font-semibold">{lobby.deck_name}</p>
@@ -361,17 +361,17 @@ export default function LobbyRoom({
                   {players.map((player) => (
                     <div
                       key={player.id}
-                      className="flex items-center justify-between p-3 bg-white rounded-lg border"
+                      className="flex items-center justify-between p-3 bg-card rounded-lg border"
                     >
                       <div className="flex items-center gap-2">
                         {player.user_id === lobby.host_id && (
                           <Crown className="w-4 h-4 text-yellow-500" />
                         )}
-                        <span className="font-medium">
+                        <span className="font-medium text-foreground">
                           {player.profiles.display_name}
                         </span>
                         {player.user_id === userId && (
-                          <span className="text-xs text-muted-foreground">(You)</span>
+                          <span className="text-xs text-foreground/70">(You)</span>
                         )}
                       </div>
                       {isHost && player.user_id !== userId && (
@@ -401,7 +401,7 @@ export default function LobbyRoom({
                 {isHost && (
                   <Button
                     onClick={handleStartGame}
-                    className="w-full mt-6 bg-purple-600 hover:bg-purple-700"
+                    className="w-full mt-6 bg-primary hover:bg-primary/90"
                     disabled={players.length < 2}
                   >
                     {players.length < 2

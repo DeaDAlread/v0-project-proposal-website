@@ -746,7 +746,7 @@ export default function GameInterface({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
+    <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] p-6">
       {connectionStatus !== 'connected' && (
         <div className="fixed top-4 right-4 z-50">
           <div className={`px-4 py-2 rounded-lg shadow-lg ${
@@ -765,7 +765,7 @@ export default function GameInterface({
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl text-purple-600">
+                  <CardTitle className="text-2xl text-primary">
                     Round {lobby.current_round} of {lobby.max_rounds}
                   </CardTitle>
                   <div className="flex items-center gap-4">
@@ -808,25 +808,25 @@ export default function GameInterface({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="p-6 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg text-center">
+                <div className="p-6 bg-gradient-to-r from-primary/10 to-pink-500/10 dark:from-primary/5 dark:to-pink-500/5 rounded-lg text-center">
                   <p className="text-sm text-muted-foreground mb-2">
                     Current Player
                   </p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-foreground">
                     {currentPlayerName}
                   </p>
                   {isCurrentPlayer && (
-                    <div className="mt-4 p-4 bg-white rounded-lg">
+                    <div className="mt-4 p-4 bg-card rounded-lg border">
                       <p className="text-sm text-muted-foreground mb-2">
                         Your Secret Word
                       </p>
-                      <p className="text-3xl font-bold text-pink-600">
+                      <p className="text-3xl font-bold text-pink-600 dark:text-pink-400">
                         {lobby.secret_word}
                       </p>
                       <p className="text-xs text-muted-foreground mt-2">
                         Answer questions about this word!
                       </p>
-                      <p className="text-xs text-red-600 font-semibold mt-1">
+                      <p className="text-xs text-destructive font-semibold mt-1">
                         ⚠️ You cannot type this word in the chat!
                       </p>
                       <Button 
@@ -881,9 +881,9 @@ export default function GameInterface({
                       {lobby.hints_given.map((hint, index) => (
                         <div 
                           key={index}
-                          className="p-2 bg-white rounded border border-blue-200"
+                          className="p-2 bg-card rounded border border-blue-200 dark:border-blue-800"
                         >
-                          <p className="text-sm text-blue-800">{hint}</p>
+                          <p className="text-sm text-blue-800 dark:text-blue-200">{hint}</p>
                         </div>
                       ))}
                     </div>
@@ -899,15 +899,15 @@ export default function GameInterface({
                         key={msg.id}
                         className={`p-3 rounded-lg ${
                           msg.is_correct
-                            ? "bg-green-100 border-2 border-green-500"
+                            ? "bg-green-100 border-2 border-green-500 dark:bg-green-900/20 dark:border-green-700"
                             : msg.is_guess
-                            ? "bg-yellow-50"
-                            : "bg-white"
+                            ? "bg-yellow-50 dark:bg-yellow-900/10"
+                            : "bg-card"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-purple-600">
+                            <p className="text-sm font-semibold text-primary">
                               {msg.profiles.display_name}
                               {msg.user_id === userId && (
                                 <span className="text-xs text-muted-foreground ml-1">
@@ -961,8 +961,8 @@ export default function GameInterface({
                       key={player.id}
                       className={`flex items-center justify-between p-3 rounded-lg ${
                         player.user_id === lobby.current_player_id
-                          ? "bg-purple-100 border-2 border-purple-500"
-                          : "bg-white border"
+                          ? "bg-primary/10 border-2 border-primary"
+                          : "bg-card border"
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -973,7 +973,7 @@ export default function GameInterface({
                           <Crown className="w-4 h-4 text-purple-500" />
                         )}
                         <div>
-                          <p className="font-medium text-sm">
+                          <p className="font-medium text-sm text-foreground">
                             {player.profiles.display_name}
                           </p>
                           {player.user_id === userId && (
@@ -983,7 +983,7 @@ export default function GameInterface({
                           )}
                         </div>
                       </div>
-                      <span className="text-lg font-bold text-purple-600">
+                      <span className="text-lg font-bold text-primary">
                         {player.score}
                       </span>
                     </div>

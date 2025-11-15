@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export default function SignUpSuccessPage() {
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-6 bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50">
+    <div className="flex min-h-screen w-full items-center justify-center p-6 bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))]">
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <Card>

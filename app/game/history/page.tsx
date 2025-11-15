@@ -73,14 +73,14 @@ export default function GameHistoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
+    <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] p-6">
       <div className="container mx-auto max-w-4xl">
         <div className="mb-6">
           <Button variant="ghost" asChild>
@@ -93,7 +93,7 @@ export default function GameHistoryPage() {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-purple-600">
+            <CardTitle className="text-3xl font-bold text-primary">
               Game History
             </CardTitle>
           </CardHeader>
@@ -137,10 +137,10 @@ export default function GameHistoryPage() {
                     {game.players.map((player, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                        className="flex items-center justify-between p-2 bg-muted rounded"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-purple-600">#{player.placement}</span>
+                          <span className="font-semibold text-primary">#{player.placement}</span>
                           <span>{player.display_name}</span>
                         </div>
                         <span className="font-medium">{player.final_score} pts</span>

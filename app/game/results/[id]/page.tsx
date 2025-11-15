@@ -85,14 +85,14 @@ export default async function ResultsPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
+    <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] p-6">
       <div className="container mx-auto max-w-4xl">
         <Card className="mb-6">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
               <Trophy className="w-20 h-20 text-yellow-500" />
             </div>
-            <CardTitle className="text-4xl font-bold text-purple-600 mb-2">
+            <CardTitle className="text-4xl font-bold text-primary mb-2">
               Game Over!
             </CardTitle>
             <CardDescription className="text-lg">
@@ -120,12 +120,12 @@ export default async function ResultsPage({
                   key={player.id}
                   className={`flex items-center justify-between p-4 rounded-lg ${
                     index === 0
-                      ? "bg-gradient-to-r from-yellow-100 to-yellow-200 border-2 border-yellow-500"
+                      ? "bg-yellow-500/20 border-2 border-yellow-500 dark:bg-yellow-500/10"
                       : index === 1
-                      ? "bg-gradient-to-r from-gray-100 to-gray-200"
+                      ? "bg-muted/50 border"
                       : index === 2
-                      ? "bg-gradient-to-r from-orange-100 to-orange-200"
-                      : "bg-white border"
+                      ? "bg-orange-500/20 border dark:bg-orange-500/10"
+                      : "bg-card border"
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -146,18 +146,18 @@ export default async function ResultsPage({
                       )}
                     </div>
                     <div>
-                      <p className="font-bold text-lg">
+                      <p className="font-bold text-lg text-foreground">
                         {player.profiles.display_name}
                       </p>
                       {player.user_id === data.user.id && (
-                        <span className="text-xs text-purple-600 font-medium">
+                        <span className="text-xs text-primary font-medium">
                           You
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-3xl font-bold text-purple-600">
+                    <p className="text-3xl font-bold text-primary">
                       {player.score}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -171,7 +171,7 @@ export default async function ResultsPage({
         </Card>
 
         <div className="flex gap-4 justify-center flex-wrap">
-          <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
+          <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
             <Link href="/game">
               <Home className="w-4 h-4 mr-2" />
               Back to Lobbies

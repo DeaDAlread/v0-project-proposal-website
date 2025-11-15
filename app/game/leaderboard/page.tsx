@@ -28,7 +28,7 @@ export default async function LeaderboardPage() {
   const userRank = leaderboard?.findIndex(entry => entry.user_id === data.user.id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
+    <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] p-6">
       <div className="container mx-auto max-w-4xl">
         <div className="mb-6">
           <Button asChild variant="ghost">
@@ -41,7 +41,7 @@ export default async function LeaderboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-purple-600 flex items-center gap-2">
+            <CardTitle className="text-3xl font-bold text-primary flex items-center gap-2">
               <Trophy className="w-8 h-8 text-yellow-500" />
               Global Leaderboard
             </CardTitle>
@@ -57,10 +57,10 @@ export default async function LeaderboardPage() {
                     key={entry.id}
                     className={`flex items-center justify-between p-4 rounded-lg transition-all ${
                       entry.user_id === data.user.id
-                        ? "bg-purple-100 border-2 border-purple-500"
+                        ? "bg-primary/10 border-2 border-primary"
                         : index < 3
-                        ? "bg-gradient-to-r from-yellow-50 to-yellow-100"
-                        : "bg-white border"
+                        ? "bg-yellow-500/10 border border-yellow-500/20 dark:bg-yellow-500/5"
+                        : "bg-card border"
                     }`}
                   >
                     <div className="flex items-center gap-4">
@@ -81,18 +81,18 @@ export default async function LeaderboardPage() {
                         )}
                       </div>
                       <div>
-                        <p className="font-semibold text-lg">
+                        <p className="font-semibold text-lg text-foreground">
                           {entry.display_name}
                         </p>
                         {entry.user_id === data.user.id && (
-                          <span className="text-xs text-purple-600 font-medium">
+                          <span className="text-xs text-primary font-medium">
                             You
                           </span>
                         )}
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-purple-600">
+                      <p className="text-2xl font-bold text-primary">
                         {entry.wins}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -112,10 +112,10 @@ export default async function LeaderboardPage() {
             </div>
 
             {userRank !== undefined && userRank >= 0 && (
-              <div className="mt-6 p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
+              <div className="mt-6 p-4 bg-primary/10 rounded-lg border-2 border-primary/20">
                 <p className="text-center text-sm text-muted-foreground">
                   Your current rank:{" "}
-                  <span className="font-bold text-purple-600 text-lg">
+                  <span className="font-bold text-primary text-lg">
                     #{userRank + 1}
                   </span>
                 </p>
