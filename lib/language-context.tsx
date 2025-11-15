@@ -87,6 +87,9 @@ const translations: Record<Language, Record<string, string>> = {
     'create.button': 'Create Lobby',
     'create.dialogTitle': 'Create New Lobby',
     'create.dialogDescription': 'Choose your lobby settings',
+    'create.roomName': 'Room Name',
+    'create.roomNamePlaceholder': 'Enter room name (e.g., Epic Game Night)',
+    'create.roomNameHelp': 'Give your room a memorable name',
     'create.private': 'Private Lobby',
     'create.passwordLabel': 'Password',
     'create.passwordPlaceholder': 'Enter lobby password (min 4 characters)',
@@ -199,6 +202,16 @@ const translations: Record<Language, Record<string, string>> = {
     'history.pts': 'pts',
     'history.rounds': 'rounds',
     
+    // Leaderboard page
+    'leaderboard.backToLobbies': 'Back to Lobbies',
+    'leaderboard.title': 'Leaderboard',
+    'leaderboard.subtitle': 'Top players by wins',
+    'leaderboard.you': 'You',
+    'leaderboard.wins': 'Wins',
+    'leaderboard.win': 'Win',
+    'leaderboard.noEntries': 'No players in leaderboard. Be the first to win!',
+    'leaderboard.yourRank': 'Your current rank:',
+    
     // Home page translations
     'home.title': 'Who Am I?',
     'home.welcome': 'Welcome back',
@@ -278,6 +291,9 @@ const translations: Record<Language, Record<string, string>> = {
     'create.button': 'สร้างห้อง',
     'create.dialogTitle': 'สร้างห้องใหม่',
     'create.dialogDescription': 'เลือกการตั้งค่าห้อง',
+    'create.roomName': 'ชื่อห้อง',
+    'create.roomNamePlaceholder': 'กรอกชื่อห้อง (เช่น คืนเกมสุดมันส์)',
+    'create.roomNameHelp': 'ตั้งชื่อห้องที่น่าจดจำ',
     'create.private': 'ห้องส่วนตัว',
     'create.passwordLabel': 'รหัสผ่าน',
     'create.passwordPlaceholder': 'กรอกรหัสผ่าน (อย่างน้อย 4 ตัวอักษร)',

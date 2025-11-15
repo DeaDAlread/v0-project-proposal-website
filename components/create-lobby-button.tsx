@@ -27,6 +27,7 @@ const DEFAULT_WORDS = [
 
 export default function CreateLobbyButton({ userId, isGuest = false }: { userId: string; isGuest?: boolean }) {
   const [isCreating, setIsCreating] = useState(false);
+  const [roomName, setRoomName] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -35,6 +36,16 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
   const { t } = useLanguage();
 
   const handleCreateLobby = async () => {
+    if (!roomName.trim()) {
+      setError("Please enter a room name");
+      return;
+    }
+
+    if (roomName.trim().length < 3) {
+      setError("Room name must be at least 3 characters");
+      return;
+    }
+
     if (isPrivate && !password.trim()) {
       setError("Please enter a password for private lobby");
       return;
@@ -68,6 +79,7 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
 
       const lobbyData: any = {
         host_id: hostId,
+        name: roomName.trim(),
         status: "waiting",
         deck_name: "Default Deck",
         deck_words: DEFAULT_WORDS,
@@ -112,6 +124,7 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
       console.log("[v0] Player added to lobby successfully");
 
       setDialogOpen(false);
+      setRoomName("");
       setPassword("");
       setIsPrivate(false);
       router.push(`/game/lobby/${lobby.id}`);
@@ -152,6 +165,21 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
               {error}
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label htmlFor="roomName">{t('create.roomName')}</Label>
+            <Input
+              id="roomName"
+              type="text"
+              value={roomName}
+              onChange={(e) => setRoomName(e.target.value)}
+              placeholder={t('create.roomNamePlaceholder')}
+              maxLength={50}
+            />
+            <p className="text-sm text-muted-foreground">
+              {t('create.roomNameHelp')}
+            </p>
+          </div>
 
           {!isGuest && (
             <>

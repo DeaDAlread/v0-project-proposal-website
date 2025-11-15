@@ -27,6 +27,7 @@ type Lobby = {
   deck_name: string;
   created_at: string;
   password?: string | null;
+  name?: string | null;
   profiles: {
     display_name: string;
   };
@@ -213,7 +214,9 @@ export default function LobbyList({ userId }: { userId: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Crown className="w-5 h-5 text-yellow-500" />
-              {lobby.is_ghost ? t('lobby.abandonedGame') : `${lobby.profiles.display_name}${t('lobby.game')}`}
+              {lobby.is_ghost 
+                ? t('lobby.abandonedGame')
+                : lobby.name || `${lobby.profiles.display_name}${t('lobby.game')}`}
             </CardTitle>
             <CardDescription>
               {t('lobby.round')} {lobby.current_round}/{lobby.max_rounds} • {lobby.deck_name}
