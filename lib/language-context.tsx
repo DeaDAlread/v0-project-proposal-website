@@ -216,6 +216,18 @@ const translations: Record<Language, Record<string, string>> = {
     'home.title': 'Who Am I?',
     'home.welcome': 'Welcome back',
     'home.guest': 'Guest',
+    
+    // Join by code translations
+    'joinByCode.title': 'Join by Code',
+    'joinByCode.description': 'Enter a lobby code to join directly',
+    'joinByCode.label': 'Lobby Code',
+    'joinByCode.placeholder': 'Enter lobby code...',
+    'joinByCode.button': 'Join Lobby',
+    'joinByCode.joining': 'Joining...',
+    'joinByCode.alertEnterCode': 'Please enter a lobby code',
+    'joinByCode.alertNotFound': 'Lobby not found or no longer available',
+    'joinByCode.alertWrongPassword': 'Incorrect password',
+    'joinByCode.alertFailed': 'Failed to join lobby',
   },
   th: {
     // Auth pages
@@ -420,6 +432,18 @@ const translations: Record<Language, Record<string, string>> = {
     'home.title': 'ฉันคือใคร?',
     'home.welcome': 'ยินดีต้อนรับกลับมา',
     'home.guest': 'แขก',
+    
+    // Join by code translations in Thai
+    'joinByCode.title': 'เข้าร่วมด้วยรหัส',
+    'joinByCode.description': 'กรอกรหัสห้องเพื่อเข้าร่วมโดยตรง',
+    'joinByCode.label': 'รหัสห้อง',
+    'joinByCode.placeholder': 'กรอกรหัสห้อง...',
+    'joinByCode.button': 'เข้าร่วมห้อง',
+    'joinByCode.joining': 'กำลังเข้าร่วม...',
+    'joinByCode.alertEnterCode': 'กรุณากรอกรหัสห้อง',
+    'joinByCode.alertNotFound': 'ไม่พบห้องหรือห้องไม่พร้อมใช้งาน',
+    'joinByCode.alertWrongPassword': 'รหัสผ่านไม่ถูกต้อง',
+    'joinByCode.alertFailed': 'เข้าร่วมห้องล้มเหลว',
   },
 };
 

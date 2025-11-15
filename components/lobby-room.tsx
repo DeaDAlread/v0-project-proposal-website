@@ -320,12 +320,16 @@ export default function LobbyRoom({
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-primary">
-              {t('room.waiting')}
-            </CardTitle>
-            <CardDescription>
-              {t('room.lobbyCode')}: {lobbyId.slice(0, 8).toUpperCase()}
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-3xl font-bold text-primary">
+                  {t('room.waiting')}
+                </CardTitle>
+                <CardDescription className="mt-2">
+                  {t('room.lobbyCode')}: <code className="bg-muted px-2 py-1 rounded text-foreground font-mono font-semibold">{lobbyId.slice(0, 8).toUpperCase()}</code>
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createBrowserClient } from "@/lib/supabase/client";
 import LobbyList from "@/components/lobby-list";
 import CreateLobbyButton from "@/components/create-lobby-button";
+import JoinByCode from "@/components/join-by-code";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import HowToPlayDialog from "@/components/how-to-play-dialog";
@@ -134,6 +135,7 @@ function GamePageContent() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <CreateLobbyButton userId={user.id} isGuest={isGuest} />
+          <JoinByCode userId={user.id} />
           <LobbyList userId={user.id} />
         </div>
       </div>
