@@ -280,6 +280,8 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.passwordTooShort': 'Password must be at least 6 characters',
     'profile.wrongPassword': 'Current password is incorrect',
     'profile.backToGame': 'Back to Game',
+    'profile.emailVerificationSent': 'Verification email sent! Please check your email to confirm the new address.',
+    'profile.imageUploadError': 'Please upload an image file (JPG, PNG, etc.)',
   },
   th: {
     // Auth pages
@@ -548,6 +550,8 @@ const translations: Record<Language, Record<string, string>> = {
     'profile.passwordTooShort': 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
     'profile.wrongPassword': 'รหัสผ่านปัจจุบันไม่ถูกต้อง',
     'profile.backToGame': 'กลับไปเกม',
+    'profile.emailVerificationSent': 'ส่งอีเมลยืนยันแล้ว! กรุณาตรวจสอบอีเมลเพื่อยืนยันที่อยู่ใหม่',
+    'profile.imageUploadError': 'กรุณาอัพโหลดไฟล์รูปภาพ (JPG, PNG, ฯลฯ)',
   },
 };
 

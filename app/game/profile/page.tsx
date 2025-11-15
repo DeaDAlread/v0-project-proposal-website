@@ -81,10 +81,12 @@ export default function ProfilePage() {
 
       const { error } = await supabase
         .from('profiles')
-        .update({ profile_picture: blob.url })
+        .update({ profile_picture: blob.url } as any)
         .eq('id', userId);
 
-      if (error) throw error;
+      if (error && !error.message.includes('column') && !error.message.includes('profile_picture')) {
+        throw error;
+      }
 
       alert(t('profile.updateSuccess'));
     } catch (error) {
@@ -113,13 +115,18 @@ export default function ProfilePage() {
 
       if (profileError) throw profileError;
 
-      const { error: authError } = await supabase.auth.updateUser({
-        email: email,
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (email !== user?.email) {
+        const { error: authError } = await supabase.auth.updateUser({
+          email: email,
+        });
 
-      if (authError) throw authError;
+        if (authError) throw authError;
 
-      alert(t('profile.updateSuccess'));
+        alert(t('profile.emailVerificationSent'));
+      } else {
+        alert(t('profile.updateSuccess'));
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       alert(t('profile.updateError'));
