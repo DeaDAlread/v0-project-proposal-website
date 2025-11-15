@@ -30,6 +30,7 @@ type Lobby = {
     display_name: string;
   };
   player_count?: number;
+  is_ghost?: boolean;
 };
 
 export default function LobbyList({ userId }: { userId: string }) {
@@ -85,7 +86,8 @@ export default function LobbyList({ userId }: { userId: string }) {
 
       const lobbiesWithCount = (lobbiesData || []).map((lobby: any) => ({
         ...lobby,
-        player_count: countMap.get(lobby.id) || 0
+        player_count: countMap.get(lobby.id) || 0,
+        is_ghost: !lobby.profiles || !lobby.profiles.display_name
       }));
 
       setLobbies(lobbiesWithCount);
@@ -152,6 +154,37 @@ export default function LobbyList({ userId }: { userId: string }) {
     }
   };
 
+  const handleDeleteLobby = async (lobbyId: string, hostId: string, isGhost: boolean = false) => {
+    if (!isGhost && hostId !== userId) {
+      alert("Only the host can delete the lobby");
+      return;
+    }
+
+    if (!confirm(isGhost ? "Delete this abandoned lobby?" : "Are you sure you want to delete this lobby?")) {
+      return;
+    }
+
+    try {
+      const deleteQuery = supabase
+        .from("lobbies")
+        .delete()
+        .eq("id", lobbyId);
+      
+      if (!isGhost) {
+        deleteQuery.eq("host_id", userId);
+      }
+
+      const { error } = await deleteQuery;
+
+      if (error) throw error;
+
+      fetchLobbies();
+    } catch (error) {
+      console.error("Error deleting lobby:", error);
+      alert("Failed to delete lobby");
+    }
+  };
+
   if (isLoading) {
     return <LobbyListSkeleton />;
   }
@@ -178,7 +211,7 @@ export default function LobbyList({ userId }: { userId: string }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Crown className="w-5 h-5 text-yellow-500" />
-              {lobby.profiles.display_name}'s Game
+              {lobby.is_ghost ? "Abandoned Game" : `${lobby.profiles.display_name}'s Game`}
             </CardTitle>
             <CardDescription>
               Round {lobby.current_round}/{lobby.max_rounds} • {lobby.deck_name}
@@ -193,13 +226,24 @@ export default function LobbyList({ userId }: { userId: string }) {
                   <Lock className="w-4 h-4 text-purple-500 ml-2" />
                 )}
               </div>
-              <Button
-                onClick={() => handleJoinLobby(lobby.id, !!lobby.password)}
-                size="sm"
-                className="bg-pink-500 hover:bg-pink-600"
-              >
-                Join Game
-              </Button>
+              <div className="flex gap-2">
+                {(lobby.host_id === userId || lobby.is_ghost) && (
+                  <Button
+                    onClick={() => handleDeleteLobby(lobby.id, lobby.host_id, lobby.is_ghost)}
+                    size="sm"
+                    variant="destructive"
+                  >
+                    Delete
+                  </Button>
+                )}
+                <Button
+                  onClick={() => handleJoinLobby(lobby.id, !!lobby.password)}
+                  size="sm"
+                  className="bg-pink-500 hover:bg-pink-600"
+                >
+                  Join Game
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
