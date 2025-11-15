@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
-import { HCaptchaWidget } from "@/components/hcaptcha-widget";
+import { CaptchaProvider } from '@/components/captcha-provider';
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -69,7 +69,7 @@ export default function SignUpPage() {
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
-      setCaptchaToken(null);
+      setCaptchaToken(null); // Reset captcha on error
     } finally {
       setIsLoading(false);
     }
@@ -156,10 +156,12 @@ export default function SignUpPage() {
                     </Label>
                   </div>
 
-                  <HCaptchaWidget 
-                    onVerify={setCaptchaToken}
-                    onExpire={() => setCaptchaToken(null)}
-                  />
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <CaptchaProvider 
+                      onVerify={setCaptchaToken}
+                      onExpire={() => setCaptchaToken(null)}
+                    />
+                  </div>
 
                   {error && <p className="text-sm text-destructive">{error}</p>}
                   <Button 
