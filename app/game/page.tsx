@@ -11,6 +11,7 @@ import Link from "next/link";
 import HowToPlayDialog from "@/components/how-to-play-dialog";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useLanguage } from "@/lib/language-context";
+import { User } from 'lucide-react';
 
 function GamePageContent() {
   const router = useRouter();
@@ -115,6 +116,14 @@ function GamePageContent() {
           </div>
           <div className="flex gap-2">
             <>
+              {!isGuest && (
+                <Button asChild variant="outline">
+                  <Link href="/game/profile">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
+                </Button>
+              )}
               <Button asChild variant="outline">
                 <Link href="/game/decks">{t('nav.myDecks')}</Link>
               </Button>
