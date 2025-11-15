@@ -41,10 +41,11 @@ export default function JoinByCode({ userId }: { userId: string }) {
     setIsJoining(true);
 
     try {
+      const code = lobbyCode.trim().toUpperCase();
       const { data: lobby, error: lobbyError } = await supabase
         .from('lobbies')
         .select('id, status, password')
-        .eq('id', lobbyCode.trim())
+        .eq('room_code', code)
         .eq('status', 'waiting')
         .single();
 
@@ -93,11 +94,7 @@ export default function JoinByCode({ userId }: { userId: string }) {
       setLobbyCode('');
     } catch (error: any) {
       console.error('[v0] Error joining by code:', error);
-      if (error.code === '23505') {
-        router.push(`/game/lobby/${lobbyCode.trim()}`);
-      } else {
-        alert(t('joinByCode.alertFailed'));
-      }
+      alert(t('joinByCode.alertFailed'));
     } finally {
       setIsJoining(false);
     }
@@ -120,8 +117,10 @@ export default function JoinByCode({ userId }: { userId: string }) {
               <Input
                 id="lobby-code"
                 value={lobbyCode}
-                onChange={(e) => setLobbyCode(e.target.value)}
+                onChange={(e) => setLobbyCode(e.target.value.toUpperCase())}
                 placeholder={t('joinByCode.placeholder')}
+                maxLength={6}
+                className="font-mono text-lg tracking-wider"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && lobbyCode.trim() && !isJoining) {
                     handleJoinByCode();

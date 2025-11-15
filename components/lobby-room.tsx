@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Users, Settings, Crown, ArrowLeft, UserX } from 'lucide-react';
+import { Users, Settings, Crown, ArrowLeft, UserX, Copy, Check } from 'lucide-react';
 import GameInterface from "@/components/game-interface";
 import { ReadyCheck } from "@/components/ready-check";
 import { LobbyChat } from "@/components/lobby-chat";
@@ -61,6 +61,7 @@ type Lobby = {
   chat_start_time: string;
   round_start_time: string;
   round_duration: number;
+  room_code?: string; // Added room_code field
 };
 
 export default function LobbyRoom({
@@ -81,6 +82,7 @@ export default function LobbyRoom({
   const [selectedDeck, setSelectedDeck] = useState(initialLobby.deck_name);
   const [maxRounds, setMaxRounds] = useState(initialLobby.max_rounds);
   const [isLoading, setIsLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const { t } = useLanguage();
@@ -284,6 +286,14 @@ export default function LobbyRoom({
     }
   };
 
+  const handleCopyCode = async () => {
+    if (lobby?.room_code) {
+      await navigator.clipboard.writeText(lobby.room_code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   if (lobby.status === "playing") {
     console.log("[v0] LobbyRoom: Rendering game interface");
     return (
@@ -318,18 +328,40 @@ export default function LobbyRoom({
           </Button>
         </div>
 
-        <Card className="mb-6">
+        <Card className="mb-6 border-2 border-primary/20">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex-1">
                 <CardTitle className="text-3xl font-bold text-primary">
                   {t('room.waiting')}
                 </CardTitle>
-                <CardDescription className="mt-2 flex items-center gap-2">
-                  {t('room.lobbyCode')}: 
-                  <code className="bg-muted px-2 py-1 rounded text-foreground font-mono text-xs select-all">
-                    {lobbyId}
-                  </code>
+                <CardDescription className="mt-3">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">{t('room.lobbyCode')}</p>
+                      <code className="bg-primary/10 px-4 py-2 rounded-lg text-foreground font-mono text-2xl font-bold tracking-wider select-all border border-primary/20">
+                        {lobby?.room_code || 'Loading...'}
+                      </code>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyCode}
+                      className="h-12"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </CardDescription>
               </div>
             </div>
