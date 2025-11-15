@@ -84,6 +84,9 @@ export default function GameInterface({
   const isCurrentPlayer = lobby.current_player_id === userId;
   const currentPlayerName = players.find(p => p.user_id === lobby.current_player_id)?.profiles.display_name || "Unknown";
 
+  const [lastMessageTime, setLastMessageTime] = useState(0);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('connected');
+
   useEffect(() => {
     setLobby({ ...initialLobby });
     setPlayers([...initialPlayers]);
@@ -108,7 +111,7 @@ export default function GameInterface({
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "lobby_players", filter: `lobby_id=eq.${lobby.id}` },
         () => {
-          fetchPlayers();
+          setTimeout(() => fetchPlayers(), 100);
         }
       )
       .on(
@@ -126,15 +129,27 @@ export default function GameInterface({
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setConnectionStatus('connected');
+        } else if (status === 'CLOSED') {
+          setConnectionStatus('disconnected');
+          setTimeout(() => {
+            setConnectionStatus('reconnecting');
+          }, 2000);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
     };
   }, [lobby.id]);
 
   useEffect(() => {
-    // Clear any existing interval
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
@@ -163,7 +178,6 @@ export default function GameInterface({
           setShowNonHostNext(true);
         }
 
-        // Only host auto-advances immediately
         if (isHost) {
           isAdvancingRef.current = true;
           
@@ -232,7 +246,14 @@ export default function GameInterface({
     e.preventDefault();
     if (!messageInput.trim() || isProcessing || isAdvancingRef.current) return;
 
-    const sanitizedMessage = messageInput.trim().slice(0, 500);
+    const now = Date.now();
+    if (now - lastMessageTime < 2000) {
+      setCloseGuessMessage("⏱️ Please wait 2 seconds between messages");
+      setTimeout(() => setCloseGuessMessage(""), 2000);
+      return;
+    }
+
+    const sanitizedMessage = messageInput.trim().slice(0, 100);
     
     if (isCurrentPlayer && sanitizedMessage.toLowerCase() === lobby.secret_word?.toLowerCase()) {
       setCloseGuessMessage("You cannot type the answer!");
@@ -243,6 +264,7 @@ export default function GameInterface({
 
     setIsProcessing(true);
     setMessageInput("");
+    setLastMessageTime(now);
 
     try {
       const isGuess = !isCurrentPlayer;
@@ -333,7 +355,9 @@ export default function GameInterface({
             console.error("Error advancing round:", error);
           }
           
-          isAdvancingRef.current = false;
+          setTimeout(() => {
+            isAdvancingRef.current = false;
+          }, 1000);
         }, 2000);
       }
     } catch (error) {
@@ -356,7 +380,6 @@ export default function GameInterface({
       const nextRound = lobby.current_round + 1;
       
       if (nextRound > lobby.max_rounds) {
-        // Only host can end game
         if (isHost) {
           await handleEndGame();
         }
@@ -409,6 +432,36 @@ export default function GameInterface({
       const winner = players.reduce((prev, current) =>
         prev.score > current.score ? prev : current
       );
+
+      const { data: gameHistory, error: historyError } = await supabase
+        .from('game_history')
+        .insert({
+          lobby_id: lobby.id,
+          host_id: lobby.host_id,
+          winner_id: winner.user_id,
+          winner_name: winner.profiles.display_name,
+          winner_score: winner.score,
+          total_rounds: lobby.max_rounds,
+          deck_name: lobby.deck_name,
+          player_count: players.length,
+        })
+        .select()
+        .single();
+
+      if (historyError) throw historyError;
+
+      // Store all players' final scores
+      const playerRecords = players.map((player, index) => ({
+        game_id: gameHistory.id,
+        user_id: player.user_id,
+        display_name: player.profiles.display_name,
+        final_score: player.score,
+        placement: index + 1,
+      }));
+
+      await supabase
+        .from('game_history_players')
+        .insert(playerRecords);
 
       const { data: leaderboardEntry } = await supabase
         .from("leaderboard")
@@ -540,13 +593,11 @@ export default function GameInterface({
     const hintsGiven = lobby.hints_given || [];
     const word = lobby.secret_word;
     
-    // First hint: Show letter count with underscores
     if (hintsGiven.length === 0) {
       const display = word.split('').map(char => char === ' ' ? '  ' : '_').join(' ');
       return `💡 Hint: ${display}`;
     }
     
-    // Second hint: Show first letter(s) of each word
     if (hintsGiven.length === 1) {
       const revealedPositions = new Set<number>();
       word.split('').forEach((char, idx) => {
@@ -564,22 +615,18 @@ export default function GameInterface({
       return `💡 Hint: ${display}`;
     }
     
-    // Maximum 2 more letters can be revealed after first letter (total 3 hints after letter count)
     if (hintsGiven.length >= 4) {
       return "💡 Maximum hints reached!";
     }
     
-    // Get already revealed positions from previous hints
     const revealedPositions = new Set<number>();
     
-    // Mark first letters as revealed
     word.split('').forEach((char, idx) => {
       if (idx === 0 || word[idx - 1] === ' ') {
         revealedPositions.add(idx);
       }
     });
     
-    // Parse previous hints to find revealed positions
     hintsGiven.slice(2).forEach(hint => {
       const display = hint.split('💡 Hint: ')[1] || '';
       const letters = display.split(' ').filter(c => c !== '');
@@ -594,7 +641,6 @@ export default function GameInterface({
       });
     });
     
-    // Get available positions (non-space, non-revealed)
     const availablePositions: number[] = [];
     word.split('').forEach((char, idx) => {
       if (char !== ' ' && !revealedPositions.has(idx)) {
@@ -606,12 +652,10 @@ export default function GameInterface({
       return "💡 All letters revealed!";
     }
     
-    // Reveal only 1 random letter per hint
     const shuffled = [...availablePositions].sort(() => Math.random() - 0.5);
     const positionToReveal = shuffled[0];
     revealedPositions.add(positionToReveal);
     
-    // Build hint message showing the word with revealed letters
     const display = word.split('').map((char, idx) => {
       if (char === ' ') return '  ';
       if (revealedPositions.has(idx)) return char.toUpperCase();
@@ -636,10 +680,8 @@ export default function GameInterface({
       const hint = generateHint();
       const hintsGiven = lobby.hints_given || [];
       
-      // Add the new hint to the array
       const updatedHints = [...hintsGiven, hint];
       
-      // Update the lobby with the new hint
       const { error } = await supabase
         .from("lobbies")
         .update({ hints_given: updatedHints })
@@ -705,6 +747,18 @@ export default function GameInterface({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
+      {connectionStatus !== 'connected' && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className={`px-4 py-2 rounded-lg shadow-lg ${
+            connectionStatus === 'disconnected' 
+              ? 'bg-red-500 text-white' 
+              : 'bg-yellow-500 text-white animate-pulse'
+          }`}>
+            {connectionStatus === 'disconnected' ? '🔴 Disconnected' : '🔄 Reconnecting...'}
+          </div>
+        </div>
+      )}
+      
       <div className="container mx-auto max-w-6xl">
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2 space-y-6">

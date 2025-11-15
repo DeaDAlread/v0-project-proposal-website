@@ -24,8 +24,14 @@ export default function GuestLoginPage() {
   const handleGuestLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!displayName.trim()) {
-      setError("Please enter a name");
+    const trimmedName = displayName.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      setError("Please enter a name (at least 2 characters)");
+      return;
+    }
+    
+    if (trimmedName.length > 30) {
+      setError("Name is too long (max 30 characters)");
       return;
     }
 
@@ -34,40 +40,38 @@ export default function GuestLoginPage() {
     setError(null);
 
     try {
-      // Generate a unique guest email
       const guestId = Math.random().toString(36).substring(2, 15);
       const guestEmail = `guest_${guestId}@whoami.guest`;
       const guestPassword = Math.random().toString(36).substring(2, 20);
 
-      // Create guest account
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: guestEmail,
         password: guestPassword,
         options: {
           data: {
-            display_name: displayName.trim(),
+            display_name: trimmedName,
             is_guest: true,
           },
-          emailRedirectTo: undefined, // Skip email confirmation for guests
+          emailRedirectTo: window.location.origin,
         }
       });
 
       if (signUpError) throw signUpError;
 
       if (authData.user) {
-        // Create profile for guest
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             id: authData.user.id,
             email: guestEmail,
-            display_name: displayName.trim(),
+            display_name: trimmedName,
             is_guest: true,
+          }, {
+            onConflict: 'id'
           });
 
         if (profileError) throw profileError;
 
-        // Sign in the guest immediately
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: guestEmail,
           password: guestPassword,
@@ -75,14 +79,13 @@ export default function GuestLoginPage() {
 
         if (signInError) throw signInError;
 
-        // Store guest credentials in sessionStorage for this session
         sessionStorage.setItem('guest_session', 'true');
         
         router.push("/game");
         router.refresh();
       }
     } catch (error: unknown) {
-      console.error("[v0] Guest login error:", error);
+      console.error("Guest login error:", error);
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setIsLoading(false);
@@ -116,10 +119,11 @@ export default function GuestLoginPage() {
                       required
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      maxLength={50}
+                      minLength={2}
+                      maxLength={30}
                     />
                     <p className="text-xs text-muted-foreground">
-                      This is how other players will see you
+                      This is how other players will see you (2-30 characters)
                     </p>
                   </div>
                   {error && <p className="text-sm text-destructive">{error}</p>}

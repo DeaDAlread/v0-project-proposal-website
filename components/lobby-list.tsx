@@ -11,7 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Crown } from 'lucide-react';
+import { Users, Crown, Lock } from 'lucide-react';
+import { LobbyListSkeleton } from "@/components/loading-skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Lobby = {
   id: string;
@@ -21,6 +25,7 @@ type Lobby = {
   max_rounds: number;
   deck_name: string;
   created_at: string;
+  password?: string | null;
   profiles: {
     display_name: string;
   };
@@ -30,6 +35,8 @@ type Lobby = {
 export default function LobbyList({ userId }: { userId: string }) {
   const [lobbies, setLobbies] = useState<Lobby[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [passwordDialog, setPasswordDialog] = useState<string | null>(null);
+  const [passwordInput, setPasswordInput] = useState("");
   const router = useRouter();
   const supabase = createClient();
 
@@ -89,8 +96,27 @@ export default function LobbyList({ userId }: { userId: string }) {
     }
   };
 
-  const handleJoinLobby = async (lobbyId: string) => {
+  const handleJoinLobby = async (lobbyId: string, hasPassword: boolean = false) => {
+    if (hasPassword && !passwordInput && passwordDialog !== lobbyId) {
+      setPasswordDialog(lobbyId);
+      return;
+    }
+
     try {
+      if (hasPassword && passwordInput) {
+        const { data: lobby } = await supabase
+          .from("lobbies")
+          .select("password")
+          .eq("id", lobbyId)
+          .single();
+
+        if (lobby?.password !== passwordInput) {
+          alert("Incorrect password");
+          setPasswordInput("");
+          return;
+        }
+      }
+
       const { data: existingPlayer } = await supabase
         .from("lobby_players")
         .select("id")
@@ -100,6 +126,8 @@ export default function LobbyList({ userId }: { userId: string }) {
 
       if (existingPlayer) {
         router.push(`/game/lobby/${lobbyId}`);
+        setPasswordDialog(null);
+        setPasswordInput("");
         return;
       }
 
@@ -112,6 +140,8 @@ export default function LobbyList({ userId }: { userId: string }) {
       if (error) throw error;
 
       router.push(`/game/lobby/${lobbyId}`);
+      setPasswordDialog(null);
+      setPasswordInput("");
     } catch (error: any) {
       console.error("Error joining lobby:", error);
       if (error.code === "23505") {
@@ -123,13 +153,7 @@ export default function LobbyList({ userId }: { userId: string }) {
   };
 
   if (isLoading) {
-    return (
-      <Card className="col-span-2">
-        <CardContent className="p-6">
-          <p className="text-center text-muted-foreground">Loading lobbies...</p>
-        </CardContent>
-      </Card>
-    );
+    return <LobbyListSkeleton />;
   }
 
   if (lobbies.length === 0) {
@@ -165,9 +189,12 @@ export default function LobbyList({ userId }: { userId: string }) {
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Users className="w-4 h-4" />
                 <span>{lobby.player_count} players</span>
+                {lobby.password && (
+                  <Lock className="w-4 h-4 text-purple-500 ml-2" />
+                )}
               </div>
               <Button
-                onClick={() => handleJoinLobby(lobby.id)}
+                onClick={() => handleJoinLobby(lobby.id, !!lobby.password)}
                 size="sm"
                 className="bg-pink-500 hover:bg-pink-600"
               >
@@ -177,6 +204,44 @@ export default function LobbyList({ userId }: { userId: string }) {
           </CardContent>
         </Card>
       ))}
+
+      {passwordDialog && (
+        <Dialog open={!!passwordDialog} onOpenChange={() => {
+          setPasswordDialog(null);
+          setPasswordInput("");
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Private Lobby</DialogTitle>
+              <DialogDescription>Enter the password to join</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="lobby-password">Password</Label>
+                <Input
+                  id="lobby-password"
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="Enter password"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && passwordInput) {
+                      handleJoinLobby(passwordDialog, true);
+                    }
+                  }}
+                />
+              </div>
+              <Button
+                onClick={() => handleJoinLobby(passwordDialog, true)}
+                disabled={!passwordInput}
+                className="w-full bg-purple-600 hover:bg-purple-700"
+              >
+                Join
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }

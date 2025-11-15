@@ -28,8 +28,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Users, Settings, Crown, ArrowLeft } from 'lucide-react';
+import { Users, Settings, Crown, ArrowLeft, UserX } from 'lucide-react';
 import GameInterface from "@/components/game-interface";
+import { ReadyCheck } from "@/components/ready-check";
+import { LobbyChat } from "@/components/lobby-chat";
 
 type Profile = {
   id: string;
@@ -42,6 +44,7 @@ type Player = {
   user_id: string;
   score: number;
   profiles: Profile;
+  is_ready: boolean;
 };
 
 type Lobby = {
@@ -125,7 +128,7 @@ export default function LobbyRoom({
         { event: "INSERT", schema: "public", table: "lobby_players", filter: `lobby_id=eq.${lobbyId}` },
         () => {
           console.log("[v0] Player joined, refetching players");
-          fetchPlayers();
+          setTimeout(() => fetchPlayers(), 100);
         }
       )
       .on(
@@ -133,7 +136,7 @@ export default function LobbyRoom({
         { event: "DELETE", schema: "public", table: "lobby_players", filter: `lobby_id=eq.${lobbyId}` },
         () => {
           console.log("[v0] Player left, refetching players");
-          fetchPlayers();
+          setTimeout(() => fetchPlayers(), 100);
         }
       )
       .on(
@@ -141,7 +144,7 @@ export default function LobbyRoom({
         { event: "UPDATE", schema: "public", table: "lobby_players", filter: `lobby_id=eq.${lobbyId}` },
         () => {
           console.log("[v0] Player updated, refetching players");
-          fetchPlayers();
+          setTimeout(() => fetchPlayers(), 100);
         }
       )
       .subscribe((status) => {
@@ -171,6 +174,12 @@ export default function LobbyRoom({
     if (!isHost) return;
     if (players.length < 2) {
       alert("You need at least 2 players to start the game!");
+      return;
+    }
+
+    const allReady = players.every(p => p.is_ready);
+    if (!allReady) {
+      alert("Please wait for all players to be ready!");
       return;
     }
 
@@ -259,6 +268,20 @@ export default function LobbyRoom({
     }
   };
 
+  const handleKickPlayer = async (playerId: string) => {
+    if (!isHost) return;
+    
+    try {
+      await supabase
+        .from("lobby_players")
+        .delete()
+        .eq("lobby_id", lobbyId)
+        .eq("user_id", playerId);
+    } catch (error) {
+      console.error("Error kicking player:", error);
+    }
+  };
+
   if (lobby.status === "playing") {
     console.log("[v0] LobbyRoom: Rendering game interface");
     return (
@@ -324,57 +347,82 @@ export default function LobbyRoom({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Players ({players.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {players.map((player) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between p-3 bg-white rounded-lg border"
-                >
-                  <div className="flex items-center gap-2">
-                    {player.user_id === lobby.host_id && (
-                      <Crown className="w-4 h-4 text-yellow-500" />
-                    )}
-                    <span className="font-medium">
-                      {player.profiles.display_name}
-                    </span>
-                    {player.user_id === userId && (
-                      <span className="text-xs text-muted-foreground">(You)</span>
-                    )}
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    Ready
-                  </span>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Players ({players.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {players.map((player) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center justify-between p-3 bg-white rounded-lg border"
+                    >
+                      <div className="flex items-center gap-2">
+                        {player.user_id === lobby.host_id && (
+                          <Crown className="w-4 h-4 text-yellow-500" />
+                        )}
+                        <span className="font-medium">
+                          {player.profiles.display_name}
+                        </span>
+                        {player.user_id === userId && (
+                          <span className="text-xs text-muted-foreground">(You)</span>
+                        )}
+                      </div>
+                      {isHost && player.user_id !== userId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleKickPlayer(player.user_id)}
+                        >
+                          <UserX className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {isHost && (
-              <Button
-                onClick={handleStartGame}
-                className="w-full mt-6 bg-purple-600 hover:bg-purple-700"
-                disabled={players.length < 2}
-              >
-                {players.length < 2
-                  ? "Waiting for more players..."
-                  : "Start Game"}
-              </Button>
-            )}
+                {players.length >= 2 && (
+                  <div className="mt-6">
+                    <ReadyCheck
+                      lobbyId={lobbyId}
+                      userId={userId}
+                      isHost={isHost}
+                      players={players}
+                    />
+                  </div>
+                )}
 
-            {!isHost && (
-              <p className="text-center text-muted-foreground mt-6">
-                Waiting for host to start the game...
-              </p>
-            )}
-          </CardContent>
-        </Card>
+                {isHost && (
+                  <Button
+                    onClick={handleStartGame}
+                    className="w-full mt-6 bg-purple-600 hover:bg-purple-700"
+                    disabled={players.length < 2}
+                  >
+                    {players.length < 2
+                      ? "Waiting for more players..."
+                      : "Start Game"}
+                  </Button>
+                )}
+
+                {!isHost && (
+                  <p className="text-center text-muted-foreground mt-6">
+                    Waiting for host to start the game...
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div>
+            <LobbyChat lobbyId={lobbyId} userId={userId} />
+          </div>
+        </div>
       </div>
 
       <Dialog open={showSettings} onOpenChange={setShowSettings}>

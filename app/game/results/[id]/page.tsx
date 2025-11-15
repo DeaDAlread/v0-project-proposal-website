@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Trophy, Crown, Home, BarChart } from 'lucide-react';
+import { Trophy, Crown, Home, BarChart, RotateCcw } from 'lucide-react';
 
 export default async function ResultsPage({
   params,
@@ -44,6 +44,45 @@ export default async function ResultsPage({
     .order("score", { ascending: false });
 
   const winner = players?.[0];
+
+  async function handleRematch() {
+    "use server";
+    
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user || user.id !== lobby.host_id) {
+      return;
+    }
+
+    // Create new lobby with same settings and players
+    const { data: newLobby, error: lobbyError } = await supabase
+      .from("lobbies")
+      .insert({
+        host_id: user.id,
+        status: "waiting",
+        deck_name: lobby.deck_name,
+        deck_words: lobby.deck_words,
+        max_rounds: lobby.max_rounds,
+      })
+      .select()
+      .single();
+
+    if (lobbyError || !newLobby) return;
+
+    // Add all players from previous game
+    const playerInserts = players?.map(p => ({
+      lobby_id: newLobby.id,
+      user_id: p.user_id,
+      score: 0,
+    }));
+
+    if (playerInserts) {
+      await supabase.from("lobby_players").insert(playerInserts);
+    }
+
+    redirect(`/game/lobby/${newLobby.id}`);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6">
@@ -131,7 +170,7 @@ export default async function ResultsPage({
           </CardContent>
         </Card>
 
-        <div className="flex gap-4 justify-center">
+        <div className="flex gap-4 justify-center flex-wrap">
           <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
             <Link href="/game">
               <Home className="w-4 h-4 mr-2" />
@@ -144,6 +183,14 @@ export default async function ResultsPage({
               View Leaderboard
             </Link>
           </Button>
+          {lobby.host_id === data.user.id && (
+            <form action={handleRematch}>
+              <Button type="submit" variant="outline" size="lg" className="border-purple-300">
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Rematch
+              </Button>
+            </form>
+          )}
         </div>
       </div>
     </div>

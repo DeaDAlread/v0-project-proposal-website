@@ -8,8 +8,9 @@ import CreateLobbyButton from "@/components/create-lobby-button";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import HowToPlayDialog from "@/components/how-to-play-dialog"; // Import the new component
+import { ErrorBoundary } from "@/components/error-boundary"; // Wrap page with error boundary
 
-export default function GamePage() {
+function GamePageContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -96,6 +97,10 @@ export default function GamePage() {
             <Button asChild variant="outline">
               <Link href="/game/leaderboard">Leaderboard</Link>
             </Button>
+            <Button asChild variant="outline">
+              <Link href="/game/history">History</Link>
+            </Button>
+            {/* End of game history link */}
             <Button onClick={handleSignOut} variant="ghost">
               Sign Out
             </Button>
@@ -108,5 +113,13 @@ export default function GamePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function GamePage() {
+  return (
+    <ErrorBoundary>
+      <GamePageContent />
+    </ErrorBoundary>
   );
 }
