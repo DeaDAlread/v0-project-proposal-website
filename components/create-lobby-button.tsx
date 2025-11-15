@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,12 @@ const DEFAULT_WORDS = [
   "Homer", "Michelangelo", "Galileo", "Caesar", "Lincoln"
 ];
 
+type CustomDeck = {
+  id: string;
+  name: string;
+  words: string[];
+};
+
 export default function CreateLobbyButton({ userId, isGuest = false }: { userId: string; isGuest?: boolean }) {
   const [isCreating, setIsCreating] = useState(false);
   const [roomName, setRoomName] = useState("");
@@ -32,8 +38,32 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
   const [password, setPassword] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [customDecks, setCustomDecks] = useState<CustomDeck[]>([]);
+  const [selectedDeckId, setSelectedDeckId] = useState<string>("default");
   const router = useRouter();
   const { t } = useLanguage();
+
+  useEffect(() => {
+    if (dialogOpen) {
+      fetchCustomDecks();
+    }
+  }, [dialogOpen]);
+
+  const fetchCustomDecks = async () => {
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase
+        .from("custom_decks")
+        .select("id, name, words")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      setCustomDecks(data || []);
+    } catch (error) {
+      console.error("[v0] Error fetching custom decks:", error);
+    }
+  };
 
   const handleCreateLobby = async () => {
     if (!roomName.trim()) {
@@ -77,12 +107,24 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
         console.log("[v0] Guest user creating lobby with ID:", hostId);
       }
 
+      let deckName = "Default Deck";
+      let deckWords = DEFAULT_WORDS;
+
+      if (selectedDeckId !== "default") {
+        const selectedDeck = customDecks.find(d => d.id === selectedDeckId);
+        if (selectedDeck) {
+          deckName = selectedDeck.name;
+          deckWords = selectedDeck.words;
+        }
+      }
+
       const lobbyData: any = {
         host_id: hostId,
         name: roomName.trim(),
         status: "waiting",
-        deck_name: "Default Deck",
-        deck_words: DEFAULT_WORDS,
+        deck_name: deckName,
+        deck_words: deckWords,
+        selected_deck_id: selectedDeckId !== "default" ? selectedDeckId : null,
         max_rounds: 5,
         current_round: 0,
         round_duration: 60,
@@ -127,6 +169,7 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
       setRoomName("");
       setPassword("");
       setIsPrivate(false);
+      setSelectedDeckId("default");
       router.push(`/game/lobby/${lobby.id}`);
     } catch (error: any) {
       console.error("[v0] Error creating lobby:", error);
@@ -178,6 +221,26 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
             />
             <p className="text-sm text-muted-foreground">
               {t('create.roomNameHelp')}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="deck">{t('room.deck')}</Label>
+            <select
+              id="deck"
+              value={selectedDeckId}
+              onChange={(e) => setSelectedDeckId(e.target.value)}
+              className="w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="default">{t('room.default')} (Famous People)</option>
+              {customDecks.map((deck) => (
+                <option key={deck.id} value={deck.id}>
+                  {deck.name} ({deck.words.length} {t('decks.words')})
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-muted-foreground">
+              {t('create.deckHelp') || 'Choose a word deck for your game'}
             </p>
           </div>
 

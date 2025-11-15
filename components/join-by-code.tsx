@@ -41,7 +41,7 @@ export default function JoinByCode({ userId }: { userId: string }) {
     setIsJoining(true);
 
     try {
-      const code = lobbyCode.trim().toUpperCase();
+      const code = lobbyCode.trim();
       const { data: lobby, error: lobbyError } = await supabase
         .from('lobbies')
         .select('id, status, password')
@@ -117,9 +117,9 @@ export default function JoinByCode({ userId }: { userId: string }) {
               <Input
                 id="lobby-code"
                 value={lobbyCode}
-                onChange={(e) => setLobbyCode(e.target.value.toUpperCase())}
+                onChange={(e) => setLobbyCode(e.target.value)}
                 placeholder={t('joinByCode.placeholder')}
-                maxLength={6}
+                maxLength={10}
                 className="font-mono text-lg tracking-wider"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && lobbyCode.trim() && !isJoining) {

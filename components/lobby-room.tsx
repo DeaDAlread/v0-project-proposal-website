@@ -287,11 +287,10 @@ export default function LobbyRoom({
   };
 
   const handleCopyCode = async () => {
-    if (lobby?.room_code) {
-      await navigator.clipboard.writeText(lobby.room_code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    const codeToCopy = lobby?.room_code || lobbyId;
+    await navigator.clipboard.writeText(codeToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (lobby.status === "playing") {
@@ -340,7 +339,7 @@ export default function LobbyRoom({
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">{t('room.lobbyCode')}</p>
                       <code className="bg-primary/10 px-4 py-2 rounded-lg text-foreground font-mono text-2xl font-bold tracking-wider select-all border border-primary/20">
-                        {lobby?.room_code || 'Loading...'}
+                        {lobby?.room_code || lobbyId.slice(0, 8).toUpperCase()}
                       </code>
                     </div>
                     <Button
@@ -352,12 +351,12 @@ export default function LobbyRoom({
                       {copied ? (
                         <>
                           <Check className="w-4 h-4 mr-2" />
-                          Copied!
+                          {t('room.copied') || 'Copied!'}
                         </>
                       ) : (
                         <>
                           <Copy className="w-4 h-4 mr-2" />
-                          Copy
+                          {t('room.copy') || 'Copy'}
                         </>
                       )}
                     </Button>

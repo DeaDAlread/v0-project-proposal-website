@@ -1,21 +1,22 @@
+-- Updated to generate 10-character codes with uppercase, lowercase, and numbers
 -- Add a short room code column to lobbies table
-ALTER TABLE lobbies ADD COLUMN IF NOT EXISTS room_code VARCHAR(6) UNIQUE;
+ALTER TABLE lobbies ADD COLUMN IF NOT EXISTS room_code VARCHAR(10) UNIQUE;
 
 -- Create an index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_lobbies_room_code ON lobbies(room_code);
 
--- Function to generate a unique 6-character room code
+-- Function to generate a unique 10-character room code with uppercase, lowercase, and numbers
 CREATE OR REPLACE FUNCTION generate_room_code()
 RETURNS TEXT AS $$
 DECLARE
-  chars TEXT := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; -- Exclude similar looking characters
+  chars TEXT := 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; -- Mix of upper, lower, numbers (exclude similar chars)
   result TEXT := '';
   i INTEGER;
   code_exists BOOLEAN;
 BEGIN
   LOOP
     result := '';
-    FOR i IN 1..6 LOOP
+    FOR i IN 1..10 LOOP
       result := result || substr(chars, floor(random() * length(chars) + 1)::int, 1);
     END LOOP;
     

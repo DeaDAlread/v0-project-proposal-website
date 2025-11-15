@@ -20,6 +20,9 @@ A real-time multiplayer guessing game where players try to figure out their secr
 - [Architecture Overview](#architecture-overview)
 - [Deployment](#deployment)
 - [Documentation](#documentation)
+- [Troubleshooting](#troubleshooting)
+- [Known Bugs and Fixes](#known-bugs-and-fixes)
+- [Database Migration Order](#database-migration-order)
 
 ## Features
 
@@ -223,6 +226,15 @@ If you're using v0.app:
 - Run the `001_add_password_to_lobbies.sql` script
 - Refresh your database schema
 
+**Issue: "Could not find the 'name' column of 'lobbies'"**
+- Run the `008_add_lobby_name.sql` script to add the lobby name feature
+- This adds custom room naming functionality
+
+**Issue: "Could not find the 'room_code' column"**
+- Run the `009_add_short_room_code.sql` script to enable short room codes
+- This creates 10-character codes (e.g., "aBc123XyZ4") instead of long UUIDs
+- The lobby will display a fallback code (first 8 characters) until migration is run
+
 **Issue: Real-time updates not working**
 - Verify Supabase Realtime is enabled for your tables
 - Check browser console for connection errors
@@ -232,7 +244,108 @@ If you're using v0.app:
 - Run the cleanup SQL scripts in the scripts folder
 - Use the delete button on ghost lobbies
 
+**Issue: System decks not appearing**
+- Run the `010_add_system_decks.sql` script to create default decks
+- Default decks include: Anime, Food, Game, and Country categories
+- Each deck contains 25 themed words
+
+**Issue: Language switching not working on some pages**
+- Ensure all pages import and use the `useLanguage()` hook from `@/lib/language-context`
+- Check that translation keys exist in the language dictionary
+- The language preference is stored in localStorage and persists across sessions
+
+**Issue: "Loading..." stuck on lobby code**
+- This occurs when `room_code` column doesn't exist yet
+- Run `009_add_short_room_code.sql` to fix
+- The system falls back to showing first 8 characters of lobby ID
+
 For more help, see [SETUP.md](SETUP.md) or open an issue on GitHub.
+
+## Known Bugs and Fixes
+
+### Fixed Bugs
+
+1. **Host Ready Status Bug** - Fixed: Host can now mark themselves as ready
+   - Previous issue: Host couldn't click ready button, preventing game start
+   - Fix: Removed `{!isHost &&` condition from ready-check component
+
+2. **Last Round Not Finishing** - Fixed: Game now properly ends on last round
+   - Previous issue: Game stuck when last round completes
+   - Fix: Added comprehensive logging and proper game ending flow for both host and non-host players
+
+3. **Create Lobby Error** - Fixed: Removed `is_system` column dependency
+   - Previous issue: Error fetching custom decks due to missing `is_system` column
+   - Fix: Made code backwards compatible, removed `is_system` from initial query
+
+4. **Translation Keys Not Found** - Fixed: Added missing translation keys
+   - Previous issue: "home.title" and similar keys showing as raw text
+   - Fix: Added `home.title`, `home.welcome`, `home.guest` to language dictionary
+
+5. **Room Code Display** - Partially Fixed: Shows fallback code
+   - Current state: Displays first 8 characters of UUID until migration is run
+   - Full fix: Run `009_add_short_room_code.sql` for proper 10-character codes
+
+### Active Features Requiring Migration
+
+The following features require SQL migrations to be run:
+
+1. **Custom Room Names** - `008_add_lobby_name.sql`
+   - Adds `name` column to lobbies table
+   - Allows users to name their lobbies
+
+2. **Short Room Codes** - `009_add_short_room_code.sql`
+   - Adds `room_code` column with 10-character codes
+   - Includes uppercase, lowercase, and numbers
+   - Auto-generates unique codes via database trigger
+
+3. **System Decks** - `010_add_system_decks.sql`
+   - Creates default public decks (Anime, Food, Game, Country)
+   - Adds `is_system` column and updates RLS policies
+   - Each deck contains 25 themed words
+
+### Performance Optimizations Implemented
+
+1. **Real-time Connection Monitoring**
+   - Added connection status indicator
+   - Auto-reconnect on disconnection
+   - Visual feedback for users
+
+2. **Debounced Message Sending**
+   - 2-second cooldown between messages
+   - Prevents spam and rate limiting issues
+
+3. **Optimistic UI Updates**
+   - Immediate local state updates
+   - Real-time subscription confirms changes
+
+4. **Lazy Player Fetching**
+   - Players fetched with 100ms delay after real-time events
+   - Prevents race conditions
+
+### Internationalization (i18n)
+
+Full Thai/English language support implemented:
+- Language switcher in top right corner (TH/EN toggle)
+- Translations for all pages and components
+- Language preference persists in localStorage
+- Covers: Login, Sign Up, Guest, Game, Lobby, Leaderboard, History, Decks, How to Play
+
+Missing translations are automatically displayed in English as fallback.
+
+## Database Migration Order
+
+Run SQL scripts in this specific order:
+
+1. `001_create_tables.sql` - Core table structure
+2. `002_create_triggers.sql` - Automatic functions
+3. `003_seed_default_data.sql` - Initial data
+4. `004_add_indexes.sql` - Performance indexes
+5. `005_enable_realtime.sql` - Real-time subscriptions
+6. `006_add_timer_fields.sql` - Round timing
+7. `001_add_password_to_lobbies.sql` - Private lobbies
+8. `008_add_lobby_name.sql` - Custom room names
+9. `009_add_short_room_code.sql` - Short join codes
+10. `010_add_system_decks.sql` - Default public decks
 
 ## Game Rules
 
@@ -857,27 +970,6 @@ git push origin main
 2. Test in local Supabase
 3. Run on production database
 4. Document in SETUP.md
-
-## Troubleshooting
-
-**Issue: "Failed to create guest profile"**
-- Ensure Anonymous Authentication is enabled in Supabase
-- Check that all migration scripts have been run
-
-**Issue: "Could not find the 'password' column"**
-- Run the `001_add_password_to_lobbies.sql` script
-- Refresh your database schema
-
-**Issue: Real-time updates not working**
-- Verify Supabase Realtime is enabled for your tables
-- Check browser console for connection errors
-- Ensure RLS policies are correctly configured
-
-**Issue: Guest lobbies appearing as "ghost lobbies"**
-- Run the cleanup SQL scripts in the scripts folder
-- Use the delete button on ghost lobbies
-
-For more help, see [SETUP.md](SETUP.md) or open an issue on GitHub.
 
 ## Contact & Support
 
