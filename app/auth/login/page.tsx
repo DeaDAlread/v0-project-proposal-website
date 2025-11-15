@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
-import { CaptchaProvider } from '@/components/captcha-provider';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,16 +21,11 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!captchaToken) {
-      setError("Please complete the CAPTCHA verification");
-      return;
-    }
     
     const supabase = createClient();
     setIsLoading(true);
@@ -55,7 +49,6 @@ export default function LoginPage() {
       router.refresh();
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
-      setCaptchaToken(null); // Reset captcha on error
     } finally {
       setIsLoading(false);
     }
@@ -113,15 +106,9 @@ export default function LoginPage() {
                     </Label>
                   </div>
 
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <CaptchaProvider 
-                      onVerify={setCaptchaToken}
-                      onExpire={() => setCaptchaToken(null)}
-                    />
-                  </div>
                   
                   {error && <p className="text-sm text-destructive">{error}</p>}
-                  <Button type="submit" className="w-full" disabled={isLoading || !captchaToken}>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Logging in..." : "Login"}
                   </Button>
                 </div>

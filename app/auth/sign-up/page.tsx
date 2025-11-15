@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useState } from "react";
-import { CaptchaProvider } from '@/components/captcha-provider';
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -25,7 +24,6 @@ export default function SignUpPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -40,11 +38,6 @@ export default function SignUpPage() {
       return;
     }
 
-    if (!captchaToken) {
-      setError("Please complete the CAPTCHA verification");
-      setIsLoading(false);
-      return;
-    }
 
     if (password !== repeatPassword) {
       setError("Passwords do not match");
@@ -69,7 +62,6 @@ export default function SignUpPage() {
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
-      setCaptchaToken(null); // Reset captcha on error
     } finally {
       setIsLoading(false);
     }
@@ -156,18 +148,12 @@ export default function SignUpPage() {
                     </Label>
                   </div>
 
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <CaptchaProvider 
-                      onVerify={setCaptchaToken}
-                      onExpire={() => setCaptchaToken(null)}
-                    />
-                  </div>
 
                   {error && <p className="text-sm text-destructive">{error}</p>}
                   <Button 
                     type="submit" 
                     className="w-full bg-purple-600 hover:bg-purple-700" 
-                    disabled={isLoading || !acceptedTerms || !captchaToken}
+                    disabled={isLoading || !acceptedTerms}
                   >
                     {isLoading ? "Creating an account..." : "Sign up"}
                   </Button>
