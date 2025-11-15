@@ -41,11 +41,9 @@ export default function GuestLoginPage() {
     try {
       const supabase = createClient();
 
-      console.log('[v0] Starting anonymous sign in...');
       const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
       
       if (authError) {
-        console.error('[v0] Anonymous auth error:', authError);
         throw authError;
       }
 
@@ -53,24 +51,15 @@ export default function GuestLoginPage() {
         throw new Error('No user returned from anonymous authentication');
       }
 
-      console.log('[v0] Anonymous user created with ID:', authData.user.id);
-
-      const guestEmail = `guest_${Date.now()}_${Math.random().toString(36).substring(7)}@guest.local`;
-      const { error: profileError } = await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
-        .insert({
-          id: authData.user.id, // Use the authenticated user's UUID
-          display_name: trimmedName,
-          email: guestEmail,
-          is_guest: true,
-        });
+        .update({ display_name: trimmedName })
+        .eq('id', authData.user.id);
 
-      if (profileError) {
-        console.error("[v0] Failed to create guest profile:", profileError);
-        throw new Error(profileError.message || "Failed to create guest profile");
+      if (updateError) {
+        console.error("Failed to update guest profile name:", updateError);
+        // Don't throw here - profile exists, just couldn't update the name
       }
-
-      console.log("[v0] Guest profile created successfully");
 
       sessionStorage.setItem('isGuest', 'true');
       sessionStorage.setItem('guestId', authData.user.id);
