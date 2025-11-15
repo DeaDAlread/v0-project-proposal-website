@@ -29,15 +29,11 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
 
-    console.log("[v0] Login: Starting login process for:", email);
-
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      
-      console.log("[v0] Login: Response received:", { user: data?.user?.email, session: !!data?.session, error });
       
       if (error) throw error;
       
@@ -47,11 +43,9 @@ export default function LoginPage() {
         localStorage.removeItem('rememberMe');
       }
       
-      console.log("[v0] Login: Success! Redirecting to /game");
       router.push("/game");
       router.refresh();
     } catch (error: unknown) {
-      console.error("[v0] Login: Error occurred:", error);
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setIsLoading(false);
