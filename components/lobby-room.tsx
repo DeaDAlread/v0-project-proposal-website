@@ -48,6 +48,7 @@ type Player = {
   score: number;
   profiles: Profile;
   is_ready: boolean;
+  kicked_at?: string; // Added kicked_at field
 };
 
 type Lobby = {
@@ -85,11 +86,25 @@ export default function LobbyRoom({
   const [maxRounds, setMaxRounds] = useState(initialLobby.max_rounds);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [wasKicked, setWasKicked] = useState(false); // Added state to track if current user was kicked
   const router = useRouter();
   const supabase = createClient();
   const { t } = useLanguage();
 
   const isHost = lobby.host_id === userId;
+
+  const checkIfKicked = async () => {
+    const { data, error } = await supabase
+      .from("lobby_players")
+      .select("kicked_at")
+      .eq("lobby_id", lobbyId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (data && data.kicked_at) {
+      setWasKicked(true);
+    }
+  };
 
   const fetchPlayers = async () => {
     console.log("[v0] LobbyRoom: Fetching players...");
@@ -100,6 +115,7 @@ export default function LobbyRoom({
         profiles(id, display_name, email, profile_picture)
       `)
       .eq("lobby_id", lobbyId)
+      .is("kicked_at", null) // Only fetch players who haven't been kicked
       .order("joined_at", { ascending: true });
 
     if (error) {
@@ -113,6 +129,7 @@ export default function LobbyRoom({
 
   useEffect(() => {
     fetchPlayers();
+    checkIfKicked(); // Check if current user was kicked on mount
     if (isHost) {
       fetchCustomDecks();
     }
@@ -148,8 +165,11 @@ export default function LobbyRoom({
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "lobby_players", filter: `lobby_id=eq.${lobbyId}` },
-        () => {
+        (payload) => {
           console.log("[v0] Player updated, refetching players");
+          if (payload.new && 'user_id' in payload.new && payload.new.user_id === userId && 'kicked_at' in payload.new && payload.new.kicked_at) {
+            setWasKicked(true);
+          }
           setTimeout(() => fetchPlayers(), 100);
         }
       )
@@ -283,13 +303,21 @@ export default function LobbyRoom({
     if (!isHost) return;
     
     try {
-      await supabase
+      console.log("[v0] Kicking player:", playerId);
+      const { error } = await supabase
         .from("lobby_players")
-        .delete()
+        .update({ kicked_at: new Date().toISOString() })
         .eq("lobby_id", lobbyId)
         .eq("user_id", playerId);
+
+      if (error) {
+        console.error("[v0] Error kicking player:", error);
+        throw error;
+      }
+      console.log("[v0] Player kicked successfully");
     } catch (error) {
-      console.error("Error kicking player:", error);
+      console.error("[v0] Error kicking player:", error);
+      alert(t('room.kickError') || 'Failed to kick player');
     }
   };
 
@@ -298,6 +326,32 @@ export default function LobbyRoom({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (wasKicked) {
+    return (
+      <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] flex items-center justify-center p-6">
+        <Card className="max-w-md w-full border-2 border-destructive/50">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-destructive flex items-center gap-2">
+              <UserX className="w-6 h-6" />
+              {t('room.kickedTitle')}
+            </CardTitle>
+            <CardDescription className="text-base mt-2">
+              {t('room.kickedMessage')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => router.push('/game')}
+              className="w-full"
+            >
+              {t('room.backToLobbies') || 'Back to Lobbies'}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (lobby.status === "playing") {
     console.log("[v0] LobbyRoom: Rendering game interface");

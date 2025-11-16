@@ -151,6 +151,10 @@ const translations: Record<Language, Record<string, string>> = {
     'room.roundsRange': 'Choose between 1-20 rounds',
     'room.tooManyRounds': 'Cannot set more rounds than available cards',
     'room.cardsAvailable': 'cards available',
+    'room.kickError': 'Failed to kick player',
+    'room.kickedTitle': 'You Were Kicked',
+    'room.kickedMessage': 'The host has removed you from this lobby.',
+    'room.backToLobbies': 'Back to Lobbies',
 
     // Ready check translations
     'ready.title': 'Ready Check',
@@ -432,6 +436,10 @@ const translations: Record<Language, Record<string, string>> = {
     'room.roundsRange': 'เลือกระหว่าง 1-20 รอบ',
     'room.tooManyRounds': 'ไม่สามารถตั้งรอบมากกว่าจำนวนการ์ดที่มี',
     'room.cardsAvailable': 'การ์ดที่มี',
+    'room.kickError': 'ไม่สามารถเตะผู้เล่นออกได้',
+    'room.kickedTitle': 'คุณถูกเตะออก',
+    'room.kickedMessage': 'เจ้าของห้องได้นำคุณออกจากห้องนี้',
+    'room.backToLobbies': 'กลับไปห้องเกม',
 
     // Ready check translations in Thai
     'ready.title': 'เช็คความพร้อม',
