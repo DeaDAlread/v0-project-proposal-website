@@ -89,6 +89,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.myDecks': 'My Decks',
     'nav.leaderboard': 'Leaderboard',
     'nav.history': 'History',
+    'nav.profile': 'Profile',
     'nav.signOut': 'Sign Out',
     'nav.exitGame': 'Exit Game',
     
@@ -228,6 +229,8 @@ const translations: Record<Language, Record<string, string>> = {
     'history.finalStandings': 'Final Standings',
     'history.pts': 'pts',
     'history.rounds': 'rounds',
+    'history.tableNotFoundTitle': 'Game History Not Available',
+    'history.tableNotFoundMessage': 'The game history feature is not set up yet. Please run the SQL migration script "012_add_game_history.sql" to enable game history tracking.',
     
     // Leaderboard page
     'leaderboard.backToLobbies': 'Back to Lobbies',
@@ -363,6 +366,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.myDecks': 'เด็คของฉัน',
     'nav.leaderboard': 'กระดานผู้นำ',
     'nav.history': 'ประวัติ',
+    'nav.profile': 'โปรไฟล์',
     'nav.signOut': 'ออกจากระบบ',
     'nav.exitGame': 'ออกจากเกม',
     
@@ -502,6 +506,8 @@ const translations: Record<Language, Record<string, string>> = {
     'history.finalStandings': 'อันดับสุดท้าย',
     'history.pts': 'คะแนน',
     'history.rounds': 'รอบ',
+    'history.tableNotFoundTitle': 'ไม่มีประวัติเกม',
+    'history.tableNotFoundMessage': 'ฟีเจอร์ประวัติเกมยังไม่ได้ตั้งค่า กรุณารันสคริปต์ SQL "012_add_game_history.sql" เพื่อเปิดใช้งานการบันทึกประวัติเกม',
     
     // Leaderboard page in Thai
     'leaderboard.backToLobbies': 'กลับไปห้องเกม',

@@ -11,6 +11,7 @@ import Link from "next/link";
 import HowToPlayDialog from "@/components/how-to-play-dialog";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useLanguage } from "@/lib/language-context";
+import { UserDropdown } from "@/components/user-dropdown";
 import { User } from 'lucide-react';
 
 function GamePageContent() {
@@ -115,30 +116,17 @@ function GamePageContent() {
             </p>
           </div>
           <div className="flex gap-2">
-            <>
-              {!isGuest && (
-                <Button asChild variant="outline">
-                  <Link href="/game/profile">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </Link>
-                </Button>
-              )}
-              <Button asChild variant="outline">
-                <Link href="/game/decks">{t('nav.myDecks')}</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/game/leaderboard">{t('nav.leaderboard')}</Link>
-              </Button>
-              {!isGuest && (
-                <Button asChild variant="outline">
-                  <Link href="/game/history">{t('nav.history')}</Link>
-                </Button>
-              )}
-            </>
-            <Button onClick={handleSignOut} variant="ghost">
-              {isGuest ? t('nav.exitGame') : t('nav.signOut')}
+            <Button asChild variant="outline">
+              <Link href="/game/decks">{t('nav.myDecks')}</Link>
             </Button>
+            <Button asChild variant="outline">
+              <Link href="/game/leaderboard">{t('nav.leaderboard')}</Link>
+            </Button>
+            <UserDropdown 
+              userEmail={user?.email || ''} 
+              displayName={profile?.display_name}
+              isGuest={isGuest}
+            />
           </div>
         </header>
 

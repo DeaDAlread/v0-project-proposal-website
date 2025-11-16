@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, Users, Calendar, ArrowLeft } from 'lucide-react';
+import { Trophy, Users, Calendar, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/language-context';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type GameHistory = {
   id: string;
@@ -28,6 +29,7 @@ export default function GameHistoryPage() {
   const [games, setGames] = useState<GameHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [tableError, setTableError] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const { t } = useLanguage();
@@ -58,7 +60,14 @@ export default function GameHistoryPage() {
         .order('played_at', { ascending: false })
         .limit(20);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('does not exist') || error.message.includes('not found')) {
+          setTableError(true);
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       const formattedGames = (historyData || []).map((game: any) => ({
         ...game,
@@ -101,13 +110,23 @@ export default function GameHistoryPage() {
           </CardHeader>
         </Card>
 
-        {games.length === 0 ? (
+        {tableError && (
+          <Alert className="mb-6" variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>{t('history.tableNotFoundTitle')}</AlertTitle>
+            <AlertDescription>
+              {t('history.tableNotFoundMessage')}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!tableError && games.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center text-muted-foreground">
               {t('history.noHistory')}
             </CardContent>
           </Card>
-        ) : (
+        ) : !tableError ? (
           <div className="space-y-4">
             {games.map((game) => (
               <Card key={game.id}>
@@ -158,7 +177,7 @@ export default function GameHistoryPage() {
               </Card>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
