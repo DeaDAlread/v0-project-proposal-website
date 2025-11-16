@@ -232,7 +232,7 @@ export default function CreateLobbyButton({ userId, isGuest = false }: { userId:
               onChange={(e) => setSelectedDeckId(e.target.value)}
               className="w-full h-10 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <option value="default">{t('room.default')} (Famous People)</option>
+              <option value="default">{t('room.default')}</option>
               {customDecks.map((deck) => (
                 <option key={deck.id} value={deck.id}>
                   {deck.name} ({deck.words.length} {t('decks.words')})

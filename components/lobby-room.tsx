@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Users, Settings, Crown, ArrowLeft, UserX, Copy, Check } from 'lucide-react';
+import { Users, Settings, Crown, ArrowLeft, UserX, Copy, Check, Plus, Minus } from 'lucide-react';
 import GameInterface from "@/components/game-interface";
 import { ReadyCheck } from "@/components/ready-check";
 import { LobbyChat } from "@/components/lobby-chat";
@@ -491,14 +491,38 @@ export default function LobbyRoom({
             </div>
             <div className="space-y-2">
               <Label htmlFor="rounds">{t('room.maxRounds')}</Label>
-              <Input
-                id="rounds"
-                type="number"
-                min="1"
-                max="20"
-                value={maxRounds}
-                onChange={(e) => setMaxRounds(parseInt(e.target.value) || 5)}
-              />
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setMaxRounds(Math.max(1, maxRounds - 1))}
+                  disabled={maxRounds <= 1}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  id="rounds"
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={maxRounds}
+                  onChange={(e) => setMaxRounds(parseInt(e.target.value) || 5)}
+                  className="text-center text-lg font-semibold"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setMaxRounds(Math.min(20, maxRounds + 1))}
+                  disabled={maxRounds >= 20}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                {t('room.roundsRange') || 'Choose between 1-20 rounds'}
+              </p>
             </div>
           </div>
           <DialogFooter>

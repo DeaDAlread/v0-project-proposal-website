@@ -107,7 +107,7 @@ function GamePageContent() {
     <div className="min-h-screen bg-gradient-to-br from-[hsl(var(--gradient-from))] via-[hsl(var(--gradient-via))] to-[hsl(var(--gradient-to))]">
       {!isGuest && <HowToPlayDialog userId={user.id} />}
       
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-6 max-w-7xl">
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold text-purple-600">{t('home.title')}</h1>
@@ -130,10 +130,22 @@ function GamePageContent() {
           </div>
         </header>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <CreateLobbyButton userId={user.id} isGuest={isGuest} />
-          <JoinByCode userId={user.id} />
-          <LobbyList userId={user.id} />
+        <div className="space-y-6">
+          {/* Quick Actions Section */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <CreateLobbyButton userId={user.id} isGuest={isGuest} />
+            <JoinByCode userId={user.id} />
+          </div>
+
+          {/* Available Lobbies Section */}
+          <div>
+            <h2 className="text-2xl font-semibold mb-4 text-foreground">
+              {t('lobby.available')}
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <LobbyList userId={user.id} />
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -19,7 +19,7 @@ export function DarkModeToggle() {
         .from("user_preferences")
         .select("dark_mode")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()
 
       const darkMode = data?.dark_mode || false
       setIsDark(darkMode)
@@ -42,6 +42,8 @@ export function DarkModeToggle() {
         .upsert({
           user_id: user.id,
           dark_mode: newMode,
+        }, {
+          onConflict: 'user_id'
         })
     }
   }

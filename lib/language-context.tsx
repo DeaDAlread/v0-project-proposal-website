@@ -95,6 +95,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Lobby translations
     'lobby.noActive': 'No active lobbies. Create one to get started!',
+    'lobby.available': 'Available Lobbies',
     'lobby.round': 'Round',
     'lobby.players': 'players',
     'lobby.joinGame': 'Join Game',
@@ -147,6 +148,7 @@ const translations: Record<Language, Record<string, string>> = {
     'room.startingGame': 'Starting game...',
     'room.selectDeck': 'Select a deck',
     'room.default': 'Default',
+    'room.roundsRange': 'Choose between 1-20 rounds',
     
     // Ready check translations
     'ready.title': 'Ready Check',
@@ -372,6 +374,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Lobby translations in Thai
     'lobby.noActive': 'ไม่มีห้องที่เปิดอยู่ สร้างห้องใหม่เพื่อเริ่มเล่น!',
+    'lobby.available': 'ห้องเกมที่เปิดอยู่',
     'lobby.round': 'รอบที่',
     'lobby.players': 'ผู้เล่น',
     'lobby.joinGame': 'เข้าร่วมเกม',
@@ -424,6 +427,7 @@ const translations: Record<Language, Record<string, string>> = {
     'room.startingGame': 'กำลังเริ่มเกม...',
     'room.selectDeck': 'เลือกเด็ค',
     'room.default': 'ค่าเริ่มต้น',
+    'room.roundsRange': 'เลือกระหว่าง 1-20 รอบ',
     
     // Ready check translations in Thai
     'ready.title': 'เช็คความพร้อม',

@@ -194,9 +194,9 @@ export default function LobbyList({ userId }: { userId: string }) {
 
   if (lobbies.length === 0) {
     return (
-      <Card className="col-span-2">
-        <CardContent className="p-6">
-          <p className="text-center text-muted-foreground">
+      <Card className="md:col-span-2 lg:col-span-3">
+        <CardContent className="p-12">
+          <p className="text-center text-muted-foreground text-lg">
             {t('lobby.noActive')}
           </p>
         </CardContent>
@@ -209,7 +209,7 @@ export default function LobbyList({ userId }: { userId: string }) {
       {lobbies.map((lobby) => (
         <Card
           key={lobby.id}
-          className="hover:shadow-lg transition-shadow border-purple-200"
+          className="hover:shadow-lg transition-shadow"
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
