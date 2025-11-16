@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { User, History, LogOut, ChevronDown } from 'lucide-react'
+import { User, History, LogOut, Moon, Sun, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useLanguage } from '@/lib/language-context'
@@ -24,8 +25,50 @@ interface UserDropdownProps {
 
 export function UserDropdown({ userEmail, displayName, isGuest, profilePicture }: UserDropdownProps) {
   const router = useRouter()
-  const { t } = useLanguage()
+  const { t, language, setLanguage } = useLanguage()
   const supabase = createBrowserClient()
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const loadPreference = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data } = await supabase
+        .from("user_preferences")
+        .select("dark_mode")
+        .eq("user_id", user.id)
+        .maybeSingle()
+
+      const darkMode = data?.dark_mode || false
+      setIsDark(darkMode)
+      document.documentElement.classList.toggle("dark", darkMode)
+    }
+
+    loadPreference()
+  }, [supabase])
+
+  const toggleDarkMode = async () => {
+    const newMode = !isDark
+    setIsDark(newMode)
+    document.documentElement.classList.toggle("dark", newMode)
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase
+        .from("user_preferences")
+        .upsert({
+          user_id: user.id,
+          dark_mode: newMode,
+        }, {
+          onConflict: 'user_id'
+        })
+    }
+  }
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'th' : 'en')
+  }
 
   const handleSignOut = async () => {
     if (isGuest) {
@@ -70,6 +113,22 @@ export function UserDropdown({ userEmail, displayName, isGuest, profilePicture }
             <DropdownMenuSeparator />
           </>
         )}
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          {t('nav.preferences')}
+        </DropdownMenuLabel>
+        <DropdownMenuItem onClick={toggleDarkMode}>
+          {isDark ? (
+            <Sun className="mr-2 h-4 w-4" />
+          ) : (
+            <Moon className="mr-2 h-4 w-4" />
+          )}
+          <span>{isDark ? t('nav.lightMode') : t('nav.darkMode')}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={toggleLanguage}>
+          <Globe className="mr-2 h-4 w-4" />
+          <span>{language === 'en' ? 'ภาษาไทย' : 'English'}</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>{isGuest ? t('nav.exitGame') : t('nav.signOut')}</span>

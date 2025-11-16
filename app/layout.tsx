@@ -2,9 +2,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AudioManager } from '@/components/audio-manager'
-import { DarkModeToggle } from '@/components/dark-mode-toggle'
 import { LanguageProvider } from '@/lib/language-context'
-import { LanguageSwitcher } from '@/components/language-switcher'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -42,10 +40,6 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <LanguageProvider>
-          <div className="fixed top-4 right-4 z-50 flex gap-2">
-            <LanguageSwitcher />
-            <DarkModeToggle />
-          </div>
           <AudioManager />
           {children}
           <Analytics />

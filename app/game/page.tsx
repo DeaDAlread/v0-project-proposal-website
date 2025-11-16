@@ -107,19 +107,21 @@ function GamePageContent() {
     <div className="min-h-screen bg-gradient-to-br from-[hsl(var(--gradient-from))] via-[hsl(var(--gradient-via))] to-[hsl(var(--gradient-to))]">
       {!isGuest && <HowToPlayDialog userId={user.id} />}
       
-      <div className="container mx-auto p-6 max-w-7xl">
-        <header className="flex justify-between items-center mb-8">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <header className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-4xl font-bold text-purple-600">{t('home.title')}</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              {t('home.title')}
+            </h1>
+            <p className="text-muted-foreground mt-2 text-base">
               {t('home.welcome')}, {profile?.display_name || user?.email}{isGuest ? ` (${t('home.guest')})` : ""}!
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button asChild variant="outline">
+          <div className="flex items-center gap-3">
+            <Button asChild variant="outline" size="default" className="hidden sm:flex">
               <Link href="/game/decks">{t('nav.myDecks')}</Link>
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" size="default" className="hidden sm:flex">
               <Link href="/game/leaderboard">{t('nav.leaderboard')}</Link>
             </Button>
             <UserDropdown 
@@ -131,19 +133,19 @@ function GamePageContent() {
           </div>
         </header>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Quick Actions Section */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2">
             <CreateLobbyButton userId={user.id} isGuest={isGuest} />
             <JoinByCode userId={user.id} />
           </div>
 
           {/* Available Lobbies Section */}
           <div>
-            <h2 className="text-2xl font-semibold mb-4 text-foreground">
+            <h2 className="text-2xl font-semibold mb-5 text-foreground">
               {t('lobby.available')}
             </h2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               <LobbyList userId={user.id} />
             </div>
           </div>

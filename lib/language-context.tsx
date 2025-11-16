@@ -92,6 +92,9 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.profile': 'Profile',
     'nav.signOut': 'Sign Out',
     'nav.exitGame': 'Exit Game',
+    'nav.preferences': 'Preferences',
+    'nav.darkMode': 'Dark Mode',
+    'nav.lightMode': 'Light Mode',
     
     // Lobby translations
     'lobby.noActive': 'No active lobbies. Create one to get started!',
@@ -377,6 +380,9 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.profile': 'โปรไฟล์',
     'nav.signOut': 'ออกจากระบบ',
     'nav.exitGame': 'ออกจากเกม',
+    'nav.preferences': 'การตั้งค่า',
+    'nav.darkMode': 'โหมดมืด',
+    'nav.lightMode': 'โหมดสว่าง',
     
     // Lobby translations in Thai
     'lobby.noActive': 'ไม่มีห้องที่เปิดอยู่ สร้างห้องใหม่เพื่อเริ่มเล่น!',
