@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Users, Settings, Crown, ArrowLeft, UserX, Copy, Check, Plus, Minus } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import GameInterface from "@/components/game-interface";
 import { ReadyCheck } from "@/components/ready-check";
 import { LobbyChat } from "@/components/lobby-chat";
@@ -38,6 +39,7 @@ type Profile = {
   id: string;
   display_name: string;
   email: string;
+  profile_picture?: string; // Added profile_picture field
 };
 
 type Player = {
@@ -95,7 +97,7 @@ export default function LobbyRoom({
       .from("lobby_players")
       .select(`
         *,
-        profiles(id, display_name, email)
+        profiles(id, display_name, email, profile_picture)
       `)
       .eq("lobby_id", lobbyId)
       .order("joined_at", { ascending: true });
@@ -254,6 +256,11 @@ export default function LobbyRoom({
         }
       }
 
+      if (maxRounds > deckWords.length) {
+        alert(`${t('room.tooManyRounds') || 'Cannot set more rounds than available cards'} (${deckWords.length} ${t('room.cardsAvailable') || 'cards available'})`);
+        return;
+      }
+
       const { error } = await supabase
         .from("lobbies")
         .update({
@@ -335,9 +342,9 @@ export default function LobbyRoom({
                 </CardTitle>
                 <CardDescription className="mt-3">
                   <div className="flex items-center gap-3">
-                    <div>
+                    <div className="flex-1">
                       <p className="text-xs text-muted-foreground mb-1">{t('room.lobbyCode')}</p>
-                      <code className="bg-primary/10 px-4 py-2 rounded-lg text-foreground font-mono text-2xl font-bold tracking-wider select-all border border-primary/20">
+                      <code className="bg-primary/10 px-3 py-2 rounded-lg text-foreground font-mono text-sm font-bold tracking-wide select-all border border-primary/20 break-all block">
                         {lobbyId}
                       </code>
                     </div>
@@ -345,7 +352,7 @@ export default function LobbyRoom({
                       variant="outline"
                       size="sm"
                       onClick={handleCopyCode}
-                      className="h-12"
+                      className="h-12 flex-shrink-0"
                     >
                       {copied ? (
                         <>
@@ -402,16 +409,24 @@ export default function LobbyRoom({
                       key={player.id}
                       className="flex items-center justify-between p-3 bg-card rounded-lg border"
                     >
-                      <div className="flex items-center gap-2">
-                        {player.user_id === lobby.host_id && (
-                          <Crown className="w-4 h-4 text-yellow-500" />
-                        )}
-                        <span className="font-medium text-foreground">
-                          {player.profiles.display_name}
-                        </span>
-                        {player.user_id === userId && (
-                          <span className="text-xs text-foreground/70">({t('room.you')})</span>
-                        )}
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={player.profiles.profile_picture || undefined} alt={player.profiles.display_name} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                            {player.profiles.display_name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex items-center gap-2">
+                          {player.user_id === lobby.host_id && (
+                            <Crown className="w-4 h-4 text-yellow-500" />
+                          )}
+                          <span className="font-medium text-foreground">
+                            {player.profiles.display_name}
+                          </span>
+                          {player.user_id === userId && (
+                            <span className="text-xs text-foreground/70">({t('room.you')})</span>
+                          )}
+                        </div>
                       </div>
                       {isHost && player.user_id !== userId && (
                         <Button
@@ -498,8 +513,9 @@ export default function LobbyRoom({
                   size="icon"
                   onClick={() => setMaxRounds(Math.max(1, maxRounds - 1))}
                   disabled={maxRounds <= 1}
+                  className="h-10 w-10"
                 >
-                  <Minus className="h-4 w-4" />
+                  <Minus className="h-5 w-5" />
                 </Button>
                 <Input
                   id="rounds"
@@ -516,8 +532,9 @@ export default function LobbyRoom({
                   size="icon"
                   onClick={() => setMaxRounds(Math.min(20, maxRounds + 1))}
                   disabled={maxRounds >= 20}
+                  className="h-10 w-10"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-5 w-5" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground text-center">

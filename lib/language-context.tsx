@@ -149,7 +149,9 @@ const translations: Record<Language, Record<string, string>> = {
     'room.selectDeck': 'Select a deck',
     'room.default': 'Default',
     'room.roundsRange': 'Choose between 1-20 rounds',
-    
+    'room.tooManyRounds': 'Cannot set more rounds than available cards',
+    'room.cardsAvailable': 'cards available',
+
     // Ready check translations
     'ready.title': 'Ready Check',
     'ready.count': 'Ready',
@@ -428,7 +430,9 @@ const translations: Record<Language, Record<string, string>> = {
     'room.selectDeck': 'เลือกเด็ค',
     'room.default': 'ค่าเริ่มต้น',
     'room.roundsRange': 'เลือกระหว่าง 1-20 รอบ',
-    
+    'room.tooManyRounds': 'ไม่สามารถตั้งรอบมากกว่าจำนวนการ์ดที่มี',
+    'room.cardsAvailable': 'การ์ดที่มี',
+
     // Ready check translations in Thai
     'ready.title': 'เช็คความพร้อม',
     'ready.count': 'พร้อม',

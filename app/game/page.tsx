@@ -56,7 +56,7 @@ function GamePageContent() {
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, display_name, email, profile_picture, is_guest, total_wins")
         .eq("id", user.id)
         .single();
 
@@ -126,6 +126,7 @@ function GamePageContent() {
               userEmail={user?.email || ''} 
               displayName={profile?.display_name}
               isGuest={isGuest}
+              profilePicture={profile?.profile_picture}
             />
           </div>
         </header>
