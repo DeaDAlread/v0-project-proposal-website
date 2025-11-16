@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Upload, User } from 'lucide-react';
 import Link from "next/link";
 import { useLanguage } from "@/lib/language-context";
-import { put } from '@vercel/blob';
+import { uploadProfilePicture } from '@/app/actions/upload-profile-picture';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -93,29 +93,25 @@ export default function ProfilePage() {
     setUploadingImage(true);
 
     try {
-      const blob = await put(`profile-pictures/${userId}-${Date.now()}.${file.name.split('.').pop()}`, file, {
-        access: 'public',
-      });
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const result = await uploadProfilePicture(formData);
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({ profile_picture: blob.url })
-        .eq('id', userId);
-
-      if (error) {
-        throw error;
+      if (result.error) {
+        if (result.error === 'profile_picture_column_missing') {
+          setProfilePictureColumnExists(false);
+          alert(t('profile.profilePictureNotAvailable'));
+        } else {
+          throw new Error(result.error);
+        }
+      } else if (result.url) {
+        setProfilePicture(result.url);
+        alert(t('profile.updateSuccess'));
       }
-
-      setProfilePicture(blob.url);
-      alert(t('profile.updateSuccess'));
     } catch (error: any) {
       console.error('Error uploading image:', error);
-      if (error?.message?.includes('column') && error?.message?.includes('profile_picture')) {
-        setProfilePictureColumnExists(false);
-        alert(t('profile.profilePictureNotAvailable'));
-      } else {
-        alert(t('profile.updateError'));
-      }
+      alert(t('profile.updateError'));
     } finally {
       setUploadingImage(false);
     }
