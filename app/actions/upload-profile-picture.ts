@@ -15,6 +15,16 @@ export async function uploadProfilePicture(formData: FormData) {
       return { error: 'File must be an image' };
     }
 
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validImageTypes.includes(file.type.toLowerCase())) {
+      return { error: 'Invalid image format' };
+    }
+
+    const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSizeInBytes) {
+      return { error: 'File too large' };
+    }
+
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 

@@ -80,13 +80,31 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const maxSizeInMB = 5;
+    const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
+
     if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file');
+      alert(t('profile.imageUploadError'));
+      e.target.value = ''; // Reset input
+      return;
+    }
+
+    if (!validImageTypes.includes(file.type.toLowerCase())) {
+      alert(t('profile.imageFormatError'));
+      e.target.value = ''; // Reset input
+      return;
+    }
+
+    if (file.size > maxSizeInBytes) {
+      alert(t('profile.imageTooLargeError'));
+      e.target.value = ''; // Reset input
       return;
     }
 
     if (!profilePictureColumnExists) {
       alert(t('profile.profilePictureNotAvailable'));
+      e.target.value = ''; // Reset input
       return;
     }
 
@@ -102,16 +120,25 @@ export default function ProfilePage() {
         if (result.error === 'profile_picture_column_missing') {
           setProfilePictureColumnExists(false);
           alert(t('profile.profilePictureNotAvailable'));
+        } else if (result.error === 'File must be an image') {
+          alert(t('profile.imageUploadError'));
+        } else if (result.error === 'File too large') {
+          alert(t('profile.imageTooLargeError'));
+        } else if (result.error === 'Invalid image format') {
+          alert(t('profile.imageFormatError'));
         } else {
-          throw new Error(result.error);
+          alert(`${t('profile.updateError')}: ${result.error}`);
         }
+        e.target.value = ''; // Reset input on error
       } else if (result.url) {
         setProfilePicture(result.url);
         alert(t('profile.updateSuccess'));
+        e.target.value = ''; // Reset input after success
       }
     } catch (error: any) {
       console.error('Error uploading image:', error);
       alert(t('profile.updateError'));
+      e.target.value = ''; // Reset input on error
     } finally {
       setUploadingImage(false);
     }
