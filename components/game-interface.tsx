@@ -473,42 +473,7 @@ export default function GameInterface({
 
       console.log("[v0] Winner determined:", winner.profiles.display_name, winner.score)
 
-      const { data: gameHistory, error: historyError } = await supabase
-        .from("game_history")
-        .insert({
-          lobby_id: lobby.id,
-          host_id: lobby.host_id,
-          winner_id: winner.user_id,
-          winner_name: winner.profiles.display_name,
-          winner_score: winner.score,
-          total_rounds: lobby.max_rounds,
-          deck_name: lobby.deck_name,
-          player_count: players.length,
-        })
-        .select()
-        .single()
-
-      if (historyError) {
-        console.error("[v0] Game history error:", historyError)
-        throw historyError
-      }
-
-      console.log("[v0] Game history created:", gameHistory.id)
-
-      const playerRecords = players.map((player, index) => ({
-        game_id: gameHistory.id,
-        user_id: player.user_id,
-        display_name: player.profiles.display_name,
-        final_score: player.score,
-        placement: index + 1,
-      }))
-
-      const { error: playersError } = await supabase.from("game_history_players").insert(playerRecords)
-
-      if (playersError) {
-        console.error("[v0] Player records error:", playersError)
-      }
-
+      // Update leaderboard for the winner
       const { data: leaderboardEntry } = await supabase
         .from("leaderboard")
         .select("*")
@@ -523,12 +488,53 @@ export default function GameInterface({
             display_name: winner.profiles.display_name,
           })
           .eq("user_id", winner.user_id)
+        console.log("[v0] Leaderboard updated: +1 win for", winner.profiles.display_name)
       } else {
         await supabase.from("leaderboard").insert({
           user_id: winner.user_id,
           display_name: winner.profiles.display_name,
           wins: 1,
         })
+        console.log("[v0] Leaderboard entry created for", winner.profiles.display_name)
+      }
+
+      try {
+        const { data: gameHistory, error: historyError } = await supabase
+          .from("game_history")
+          .insert({
+            lobby_id: lobby.id,
+            host_id: lobby.host_id,
+            winner_id: winner.user_id,
+            winner_name: winner.profiles.display_name,
+            winner_score: winner.score,
+            total_rounds: lobby.max_rounds,
+            deck_name: lobby.deck_name,
+            player_count: players.length,
+          })
+          .select()
+          .single()
+
+        if (!historyError && gameHistory) {
+          console.log("[v0] Game history created:", gameHistory.id)
+
+          const playerRecords = players.map((player, index) => ({
+            game_id: gameHistory.id,
+            user_id: player.user_id,
+            display_name: player.profiles.display_name,
+            final_score: player.score,
+            placement: index + 1,
+          }))
+
+          const { error: playersError } = await supabase.from("game_history_players").insert(playerRecords)
+
+          if (playersError) {
+            console.error("[v0] Player records error:", playersError)
+          }
+        } else if (historyError) {
+          console.log("[v0] Game history table not available:", historyError.message)
+        }
+      } catch (historyError) {
+        console.log("[v0] Game history feature not available (table may not exist)")
       }
 
       console.log("[v0] Updating lobby status to finished")
