@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { createBrowserClient } from "@/lib/supabase/client"
 import LobbyList from "@/components/lobby-list"
@@ -24,9 +24,13 @@ function GamePageContent() {
   const supabase = createBrowserClient()
   const { t } = useLanguage()
 
+  const isInitializing = useRef(false)
+
   useEffect(() => {
+    if (isInitializing.current) return
+    isInitializing.current = true
+
     let mounted = true
-    let authSubscription: any = null
 
     const checkRejoinableLobby = async (userId: string) => {
       if (!mounted) return
@@ -123,18 +127,17 @@ function GamePageContent() {
         }
       })
 
-      authSubscription = subscription
+      // Unsubscribe from auth state changes on cleanup
+      return () => {
+        mounted = false
+        if (subscription) {
+          subscription.unsubscribe()
+        }
+      }
     }
 
     initialize()
-
-    return () => {
-      mounted = false
-      if (authSubscription) {
-        authSubscription.unsubscribe()
-      }
-    }
-  }, [router, supabase, t])
+  }, [])
 
   const handleSignOut = async () => {
     if (isGuest) {
