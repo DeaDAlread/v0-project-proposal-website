@@ -13,6 +13,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Switch } from '@/components/ui/switch'
 import { useLanguage } from '@/lib/language-context'
 import { createBrowserClient } from '@/lib/supabase/client'
 
@@ -116,18 +117,52 @@ export function UserDropdown({ userEmail, displayName, isGuest, profilePicture }
         <DropdownMenuLabel className="text-xs text-muted-foreground">
           {t('nav.preferences')}
         </DropdownMenuLabel>
-        <DropdownMenuItem onClick={toggleDarkMode}>
-          {isDark ? (
-            <Sun className="mr-2 h-4 w-4" />
-          ) : (
-            <Moon className="mr-2 h-4 w-4" />
-          )}
-          <span>{isDark ? t('nav.lightMode') : t('nav.darkMode')}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={toggleLanguage}>
-          <Globe className="mr-2 h-4 w-4" />
-          <span>{language === 'en' ? 'ภาษาไทย' : 'English'}</span>
-        </DropdownMenuItem>
+        <div 
+          className="px-2 py-1.5 cursor-pointer hover:bg-accent rounded-sm transition-colors"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            toggleDarkMode()
+          }}
+          onSelect={(e: Event) => e.preventDefault()}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              {isDark ? (
+                <Sun className="mr-2 h-4 w-4" />
+              ) : (
+                <Moon className="mr-2 h-4 w-4" />
+              )}
+              <span className="text-sm">{isDark ? t('nav.lightMode') : t('nav.darkMode')}</span>
+            </div>
+            <Switch 
+              checked={isDark} 
+              onCheckedChange={toggleDarkMode}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+        <div 
+          className="px-2 py-1.5 cursor-pointer hover:bg-accent rounded-sm transition-colors"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            toggleLanguage()
+          }}
+          onSelect={(e: Event) => e.preventDefault()}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Globe className="mr-2 h-4 w-4" />
+              <span className="text-sm">{language === 'en' ? 'ภาษาไทย' : 'English'}</span>
+            </div>
+            <Switch 
+              checked={language === 'th'} 
+              onCheckedChange={toggleLanguage}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />

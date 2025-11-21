@@ -34,6 +34,8 @@ import GameInterface from "@/components/game-interface";
 import { ReadyCheck } from "@/components/ready-check";
 import { LobbyChat } from "@/components/lobby-chat";
 import { useLanguage } from "@/lib/language-context";
+import { LobbyQRCode } from '@/components/lobby-qr-code';
+import { saveLobbySession, clearLobbySession } from '@/lib/lobby-session';
 
 type Profile = {
   id: string;
@@ -128,6 +130,8 @@ export default function LobbyRoom({
   };
 
   useEffect(() => {
+    saveLobbySession(lobbyId, userId);
+    
     fetchPlayers();
     checkIfKicked(); // Check if current user was kicked on mount
     if (isHost) {
@@ -245,18 +249,20 @@ export default function LobbyRoom({
 
   const handleLeaveLobby = async () => {
     try {
+      clearLobbySession();
+      
       if (isHost) {
-        await supabase.from("lobbies").delete().eq("id", lobbyId);
+        await supabase.from('lobbies').delete().eq('id', lobbyId);
       } else {
         await supabase
-          .from("lobby_players")
+          .from('lobby_players')
           .delete()
-          .eq("lobby_id", lobbyId)
-          .eq("user_id", userId);
+          .eq('lobby_id', lobbyId)
+          .eq('user_id', userId);
       }
-      router.push("/game");
+      router.push('/game');
     } catch (error) {
-      console.error("[v0] Error leaving lobby:", error);
+      console.error('[v0] Error leaving lobby:', error);
     }
   };
 
@@ -328,6 +334,8 @@ export default function LobbyRoom({
   };
 
   if (wasKicked) {
+    clearLobbySession();
+    
     return (
       <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] flex items-center justify-center p-6">
         <Card className="max-w-md w-full border-2 border-destructive/50">
@@ -402,24 +410,27 @@ export default function LobbyRoom({
                         {lobbyId}
                       </code>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopyCode}
-                      className="h-12 flex-shrink-0"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="w-4 h-4 mr-2" />
-                          {t('room.copied') || 'Copied!'}
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4 mr-2" />
-                          {t('room.copy') || 'Copy'}
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyCode}
+                        className="h-12"
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            {t('room.copied') || 'Copied!'}
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4 mr-2" />
+                            {t('room.copy') || 'Copy'}
+                          </>
+                        )}
+                      </Button>
+                      <LobbyQRCode lobbyId={lobbyId} />
+                    </div>
                   </div>
                 </CardDescription>
               </div>

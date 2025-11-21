@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { useLanguage } from "@/lib/language-context";
 import { UserDropdown } from "@/components/user-dropdown";
 import { User } from 'lucide-react';
+import { getLobbySession, clearLobbySession } from '@/lib/lobby-session';
 
 function GamePageContent() {
   const router = useRouter();
@@ -20,10 +21,61 @@ function GamePageContent() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isGuest, setIsGuest] = useState(false);
+  const [checkingRejoin, setCheckingRejoin] = useState(true);
   const supabase = createBrowserClient();
   const { t } = useLanguage();
 
   useEffect(() => {
+    const checkRejoinableLobby = async (userId: string) => {
+      const session = getLobbySession();
+      if (!session || session.userId !== userId) {
+        setCheckingRejoin(false);
+        return;
+      }
+
+      console.log('[v0] GamePage: Checking if lobby is rejoinable:', session.lobbyId);
+
+      // Check if lobby still exists and is active
+      const { data: lobby, error: lobbyError } = await supabase
+        .from('lobbies')
+        .select('id, status')
+        .eq('id', session.lobbyId)
+        .maybeSingle();
+
+      if (lobbyError || !lobby) {
+        console.log('[v0] GamePage: Lobby no longer exists, clearing session');
+        clearLobbySession();
+        setCheckingRejoin(false);
+        return;
+      }
+
+      // Check if player is still in the lobby and not kicked
+      const { data: playerData, error: playerError } = await supabase
+        .from('lobby_players')
+        .select('kicked_at')
+        .eq('lobby_id', session.lobbyId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (playerError || !playerData) {
+        console.log('[v0] GamePage: Player not in lobby, clearing session');
+        clearLobbySession();
+        setCheckingRejoin(false);
+        return;
+      }
+
+      if (playerData.kicked_at) {
+        console.log('[v0] GamePage: Player was kicked, clearing session');
+        clearLobbySession();
+        setCheckingRejoin(false);
+        return;
+      }
+
+      // All checks passed, redirect to lobby
+      console.log('[v0] GamePage: Rejoining lobby:', session.lobbyId);
+      router.push(`/game/lobby/${session.lobbyId}`);
+    };
+
     console.log("[v0] GamePage: Starting authentication check");
     
     const guestSessionStr = sessionStorage.getItem('guest_session');
@@ -35,6 +87,7 @@ function GamePageContent() {
         setProfile({ display_name: guestSession.displayName });
         setIsGuest(true);
         setLoading(false);
+        checkRejoinableLobby(guestSession.id);
         return;
       } catch (e) {
         console.error("[v0] GamePage: Failed to parse guest session", e);
@@ -64,6 +117,8 @@ function GamePageContent() {
 
       setProfile(profileData);
       setLoading(false);
+      
+      checkRejoinableLobby(user.id);
     };
 
     checkAuth();
@@ -95,10 +150,15 @@ function GamePageContent() {
     }
   };
 
-  if (loading) {
+  if (loading || checkingRejoin) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[hsl(var(--gradient-from))] via-[hsl(var(--gradient-via))] to-[hsl(var(--gradient-to))]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          {checkingRejoin && (
+            <p className="text-sm text-muted-foreground">{t('room.checkingSession')}</p>
+          )}
+        </div>
       </div>
     );
   }
