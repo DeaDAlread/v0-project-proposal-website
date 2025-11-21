@@ -2,6 +2,8 @@
 
 import type React from "react"
 import { clearLobbySession } from "@/lib/lobby-session"
+import { Check } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
 
 import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -64,6 +66,8 @@ export default function GameInterface({
   userProfile: any
   isHost: boolean
 }) {
+  const { t } = useLanguage()
+
   const [lobby, setLobby] = useState<Lobby>(initialLobby)
   const [players, setPlayers] = useState<Player[]>(initialPlayers)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -377,6 +381,8 @@ export default function GameInterface({
 
       if (nextRound > lobby.max_rounds) {
         console.log("[v0] Game complete, ending game")
+        // Clear lobby session before ending
+        clearLobbySession()
         if (isHost) {
           await handleEndGame()
         } else {
@@ -777,33 +783,65 @@ export default function GameInterface({
           <div className="md:col-span-2 space-y-6">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl text-primary">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <CardTitle className="text-xl sm:text-2xl text-primary">
                     Round {lobby.current_round} of {lobby.max_rounds}
                   </CardTitle>
-                  <div className="flex items-center gap-4">
-                    <div className={`flex items-center gap-2 text-2xl font-bold ${getTimerColor()}`}>
-                      <Clock className="w-6 h-6" />
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                    <div className={`flex items-center gap-2 text-xl sm:text-2xl font-bold ${getTimerColor()}`}>
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                       {formatTime(timeRemaining)}
                     </div>
-                    {isHost && (
-                      <div className="flex gap-2">
-                        <Button onClick={handleNextRound} size="sm" variant="outline">
+                    {isHost && lobby.current_round < lobby.max_rounds && (
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <Button
+                          onClick={handleNextRound}
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 sm:flex-none bg-transparent"
+                        >
                           <ArrowRight className="w-4 h-4 mr-2" />
                           Next Round
                         </Button>
-                        <Button onClick={handleResetGame} size="sm" variant="outline">
+                        <Button
+                          onClick={handleResetGame}
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 sm:flex-none bg-transparent"
+                        >
                           <RotateCcw className="w-4 h-4 mr-2" />
                           Reset
                         </Button>
                       </div>
                     )}
-                    {!isHost && showNonHostNext && (
+                    {isHost && lobby.current_round === lobby.max_rounds && (
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <Button
+                          onClick={handleEndGame}
+                          size="sm"
+                          variant="default"
+                          className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
+                        >
+                          <Check className="w-4 h-4 mr-2" />
+                          {t("game.endGame")}
+                        </Button>
+                        <Button
+                          onClick={handleResetGame}
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 sm:flex-none bg-transparent"
+                        >
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Reset
+                        </Button>
+                      </div>
+                    )}
+                    {!isHost && showNonHostNext && lobby.current_round < lobby.max_rounds && (
                       <Button
                         onClick={handleNextRound}
                         size="sm"
                         variant="default"
-                        className="bg-orange-500 hover:bg-orange-600 animate-pulse"
+                        className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 animate-pulse"
                       >
                         <ArrowRight className="w-4 h-4 mr-2" />
                         Next Round

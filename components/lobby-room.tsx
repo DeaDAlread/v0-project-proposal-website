@@ -358,16 +358,16 @@ export default function LobbyRoom({
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] p-6">
-      <div className="container mx-auto max-w-4xl">
-        <div className="mb-6">
+    <div className="min-h-screen bg-[linear-gradient(to_bottom_right,hsl(var(--gradient-from)),hsl(var(--gradient-via)),hsl(var(--gradient-to)))] p-4 sm:p-6">
+      <div className="container mx-auto max-w-4xl flex flex-col items-center">
+        <div className="mb-6 w-full">
           <Button variant="ghost" onClick={handleLeaveLobby}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             {t("room.leaveLobby")}
           </Button>
         </div>
 
-        <Card className="mb-6 border-2 border-primary/20">
+        <Card className="mb-6 border-2 border-primary/20 w-full">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -428,7 +428,7 @@ export default function LobbyRoom({
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 w-full">
           <div>
             <Card>
               <CardHeader>
