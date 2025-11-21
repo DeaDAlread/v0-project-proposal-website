@@ -218,6 +218,14 @@ export default function GameInterface({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  useEffect(() => {
+    if (lobby.status === "finished") {
+      console.log("[v0] Lobby status changed to finished, redirecting to results")
+      clearLobbySession()
+      router.push(`/game/results/${lobby.id}`)
+    }
+  }, [lobby.status, lobby.id, router])
+
   const fetchPlayers = async () => {
     const { data } = await supabase
       .from("lobby_players")

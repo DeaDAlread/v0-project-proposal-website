@@ -263,6 +263,8 @@ const translations: Record<Language, Record<string, string>> = {
     "leaderboard.win": "Win",
     "leaderboard.noEntries": "No players in leaderboard. Be the first to win!",
     "leaderboard.yourRank": "Your current rank:",
+    "leaderboard.refresh": "Refresh",
+    "leaderboard.lastUpdate": "Last updated",
 
     // Home page translations
     "home.title": "Who Am I?",
@@ -573,6 +575,8 @@ const translations: Record<Language, Record<string, string>> = {
     "leaderboard.win": "ชนะ",
     "leaderboard.noEntries": "ยังไม่มีผู้เล่นในกระดาน เป็นคนแรกที่ชนะ!",
     "leaderboard.yourRank": "อันดับปัจจุบันของคุณ:",
+    "leaderboard.refresh": "รีเฟรช",
+    "leaderboard.lastUpdate": "อัปเดตล่าสุด",
 
     // Home page translations in Thai
     "home.title": "ฉันคือใคร?",
