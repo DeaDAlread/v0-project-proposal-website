@@ -128,15 +128,14 @@ function GamePageContent() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("[v0] GamePage: Auth state changed:", event, session?.user?.email)
-      if (event === "SIGNED_IN" && session?.user) {
-        console.log("[v0] GamePage: User signed in, reloading data")
-        setUser(session.user)
-        setLoading(false)
-      } else if (event === "SIGNED_OUT") {
+      console.log("[v0] GamePage: Auth state changed:", event)
+
+      // Only handle SIGNED_OUT event, not SIGNED_IN to prevent loop
+      if (event === "SIGNED_OUT") {
         console.log("[v0] GamePage: User signed out, redirecting")
         router.push("/auth/login")
       }
+      // Ignore SIGNED_IN and INITIAL_SESSION to prevent re-renders
     })
 
     return () => {
