@@ -25,6 +25,8 @@ function GamePageContent() {
   const { t } = useLanguage()
 
   useEffect(() => {
+    let isInitialCheckComplete = false
+
     const checkRejoinableLobby = async (userId: string) => {
       const session = getLobbySession()
       if (!session || session.userId !== userId) {
@@ -87,6 +89,7 @@ function GamePageContent() {
         setIsGuest(true)
         setLoading(false)
         checkRejoinableLobby(guestSession.id)
+        isInitialCheckComplete = true
         return
       } catch (e) {
         console.error("[v0] GamePage: Failed to parse guest session", e)
@@ -120,6 +123,7 @@ function GamePageContent() {
       setProfile(profileData)
       setLoading(false)
 
+      isInitialCheckComplete = true
       checkRejoinableLobby(user.id)
     }
 
@@ -131,7 +135,7 @@ function GamePageContent() {
       console.log("[v0] GamePage: Auth state changed:", event)
 
       // Only handle SIGNED_OUT event, not SIGNED_IN to prevent loop
-      if (event === "SIGNED_OUT") {
+      if (event === "SIGNED_OUT" && isInitialCheckComplete) {
         console.log("[v0] GamePage: User signed out, redirecting")
         router.push("/auth/login")
       }
@@ -141,7 +145,7 @@ function GamePageContent() {
     return () => {
       subscription.unsubscribe()
     }
-  }, [router, supabase])
+  }, []) // Empty dependency array to run only once
 
   const handleSignOut = async () => {
     if (isGuest) {
