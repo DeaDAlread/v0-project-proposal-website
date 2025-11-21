@@ -32,6 +32,8 @@ export function ClientLeaderboardPage({
       }
     }
 
+    fetchLeaderboard()
+
     const getTimeUntilMidnightGMT7 = () => {
       const now = new Date()
       const gmt7Offset = 7 * 60 // GMT+7 in minutes

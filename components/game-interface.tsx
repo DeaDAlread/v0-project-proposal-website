@@ -4,6 +4,7 @@ import type React from "react"
 import { clearLobbySession } from "@/lib/lobby-session"
 import { Check } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
+import { ArrowLeft } from "lucide-react"
 
 import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -76,6 +77,7 @@ export default function GameInterface({
   const [timeRemaining, setTimeRemaining] = useState(0)
   const [closeGuessMessage, setCloseGuessMessage] = useState<string>("")
   const [showNonHostNext, setShowNonHostNext] = useState(false)
+  const [revealedAnswer, setRevealedAnswer] = useState<string | null>(null)
   const isAdvancingRef = useRef(false)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const timerExpiredAtRef = useRef<number | null>(null)
@@ -172,6 +174,10 @@ export default function GameInterface({
       setTimeRemaining(remaining)
 
       if (remaining === 0 && !isAdvancingRef.current) {
+        if (!revealedAnswer && lobby.secret_word) {
+          setRevealedAnswer(lobby.secret_word)
+        }
+
         if (timerExpiredAtRef.current === null) {
           timerExpiredAtRef.current = Date.now()
         }
@@ -212,7 +218,21 @@ export default function GameInterface({
         timerIntervalRef.current = null
       }
     }
-  }, [lobby.round_start_time, lobby.round_duration, lobby.status, lobby.current_round, lobby.max_rounds, isHost])
+  }, [
+    lobby.round_start_time,
+    lobby.round_duration,
+    lobby.status,
+    isHost,
+    lobby.current_round,
+    lobby.max_rounds,
+    revealedAnswer,
+    lobby.secret_word,
+  ])
+
+  useEffect(() => {
+    setRevealedAnswer(null)
+    timerExpiredAtRef.current = null
+  }, [lobby.current_round])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -786,7 +806,89 @@ export default function GameInterface({
         </div>
       )}
 
-      <div className="container mx-auto max-w-6xl">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <Card className="shadow-lg">
+          <CardContent className="p-3 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+                <Button onClick={() => router.push("/game")} variant="ghost" size="sm" className="self-start">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  {t("lobby.leaveLobby")}
+                </Button>
+                <div className="flex items-center gap-4">
+                  <div className={`flex items-center gap-2 text-xl sm:text-2xl font-bold ${getTimerColor()}`}>
+                    <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+                    {formatTime(timeRemaining)}
+                  </div>
+                  {revealedAnswer && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 border-2 border-red-500 rounded-lg animate-pulse">
+                      <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                        {t("game.timeUpAnswer")}:
+                      </span>
+                      <span className="text-lg font-bold text-red-900 dark:text-red-100">{revealedAnswer}</span>
+                    </div>
+                  )}
+                  {isHost && lobby.current_round < lobby.max_rounds && (
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button
+                        onClick={handleNextRound}
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 sm:flex-none bg-transparent"
+                      >
+                        <ArrowRight className="w-4 h-4 mr-2" />
+                        Next Round
+                      </Button>
+                      <Button
+                        onClick={handleResetGame}
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 sm:flex-none bg-transparent"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Reset
+                      </Button>
+                    </div>
+                  )}
+                  {isHost && lobby.current_round === lobby.max_rounds && (
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button
+                        onClick={handleEndGame}
+                        size="sm"
+                        variant="default"
+                        className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        {t("game.endGame")}
+                      </Button>
+                      <Button
+                        onClick={handleResetGame}
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 sm:flex-none bg-transparent"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Reset
+                      </Button>
+                    </div>
+                  )}
+                  {!isHost && showNonHostNext && lobby.current_round < lobby.max_rounds && (
+                    <Button
+                      onClick={handleNextRound}
+                      size="sm"
+                      variant="default"
+                      className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 animate-pulse"
+                    >
+                      <ArrowRight className="w-4 h-4 mr-2" />
+                      Next Round
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2 space-y-6">
             <Card>
@@ -800,6 +902,14 @@ export default function GameInterface({
                       <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
                       {formatTime(timeRemaining)}
                     </div>
+                    {revealedAnswer && (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 border-2 border-red-500 rounded-lg animate-pulse">
+                        <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                          {t("game.timeUpAnswer")}:
+                        </span>
+                        <span className="text-lg font-bold text-red-900 dark:text-red-100">{revealedAnswer}</span>
+                      </div>
+                    )}
                     {isHost && lobby.current_round < lobby.max_rounds && (
                       <div className="flex gap-2 w-full sm:w-auto">
                         <Button
