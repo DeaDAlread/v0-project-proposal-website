@@ -25,127 +25,116 @@ function GamePageContent() {
   const { t } = useLanguage()
 
   useEffect(() => {
-    let isInitialCheckComplete = false
+    let mounted = true
+    let authSubscription: any = null
 
     const checkRejoinableLobby = async (userId: string) => {
+      if (!mounted) return
+
       const session = getLobbySession()
       if (!session || session.userId !== userId) {
         setCheckingRejoin(false)
         return
       }
 
-      console.log("[v0] GamePage: Checking if lobby is rejoinable:", session.lobbyId)
-
       // Check if lobby still exists and is active
-      const { data: lobby, error: lobbyError } = await supabase
+      const { data: lobby } = await supabase
         .from("lobbies")
         .select("id, status")
         .eq("id", session.lobbyId)
         .maybeSingle()
 
-      if (lobbyError || !lobby) {
-        console.log("[v0] GamePage: Lobby no longer exists, clearing session")
+      if (!lobby) {
         clearLobbySession()
         setCheckingRejoin(false)
         return
       }
 
       // Check if player is still in the lobby and not kicked
-      const { data: playerData, error: playerError } = await supabase
+      const { data: playerData } = await supabase
         .from("lobby_players")
         .select("kicked_at")
         .eq("lobby_id", session.lobbyId)
         .eq("user_id", userId)
         .maybeSingle()
 
-      if (playerError || !playerData) {
-        console.log("[v0] GamePage: Player not in lobby, clearing session")
-        clearLobbySession()
-        setCheckingRejoin(false)
-        return
-      }
-
-      if (playerData.kicked_at) {
-        console.log("[v0] GamePage: Player was kicked, clearing session")
+      if (!playerData || playerData.kicked_at) {
         clearLobbySession()
         setCheckingRejoin(false)
         return
       }
 
       // All checks passed, redirect to lobby
-      console.log("[v0] GamePage: Rejoining lobby:", session.lobbyId)
-      router.push(`/game/lobby/${session.lobbyId}`)
-    }
-
-    console.log("[v0] GamePage: Starting authentication check")
-
-    const guestSessionStr = sessionStorage.getItem("guest_session")
-    if (guestSessionStr) {
-      try {
-        const guestSession = JSON.parse(guestSessionStr)
-        console.log("[v0] GamePage: Guest session found:", guestSession)
-        setUser({ id: guestSession.id, email: guestSession.displayName, isGuest: true })
-        setProfile({ display_name: guestSession.displayName })
-        setIsGuest(true)
-        setLoading(false)
-        checkRejoinableLobby(guestSession.id)
-        isInitialCheckComplete = true
-        return
-      } catch (e) {
-        console.error("[v0] GamePage: Failed to parse guest session", e)
+      if (mounted) {
+        router.push(`/game/lobby/${session.lobbyId}`)
       }
     }
 
-    const checkAuth = async () => {
+    const initialize = async () => {
+      // Check guest session first
+      const guestSessionStr = sessionStorage.getItem("guest_session")
+      if (guestSessionStr) {
+        try {
+          const guestSession = JSON.parse(guestSessionStr)
+          if (mounted) {
+            setUser({ id: guestSession.id, email: guestSession.displayName, isGuest: true })
+            setProfile({ display_name: guestSession.displayName })
+            setIsGuest(true)
+            setLoading(false)
+            await checkRejoinableLobby(guestSession.id)
+          }
+          return
+        } catch (e) {
+          console.error("Failed to parse guest session", e)
+        }
+      }
+
+      // Check authenticated user
       const {
         data: { user },
-        error,
       } = await supabase.auth.getUser()
 
-      console.log("[v0] GamePage: Auth check result:", { user: user?.email, error })
-
-      if (error || !user) {
-        console.log("[v0] GamePage: No authenticated user, redirecting to login")
+      if (!user) {
         router.push("/auth/login")
         return
       }
 
+      if (!mounted) return
+
       setUser(user)
 
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData } = await supabase
         .from("profiles")
         .select("id, display_name, email, profile_picture, is_guest, total_wins")
         .eq("id", user.id)
         .single()
 
-      console.log("[v0] GamePage: Profile fetch result:", { profile: profileData, error: profileError })
+      if (mounted) {
+        setProfile(profileData)
+        setLoading(false)
+        await checkRejoinableLobby(user.id)
+      }
 
-      setProfile(profileData)
-      setLoading(false)
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event) => {
+        if (event === "SIGNED_OUT" && mounted) {
+          router.push("/auth/login")
+        }
+      })
 
-      isInitialCheckComplete = true
-      checkRejoinableLobby(user.id)
+      authSubscription = subscription
     }
 
-    checkAuth()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("[v0] GamePage: Auth state changed:", event)
-
-      // Only handle SIGNED_OUT event, not SIGNED_IN to prevent loop
-      if (event === "SIGNED_OUT" && isInitialCheckComplete) {
-        console.log("[v0] GamePage: User signed out, redirecting")
-        router.push("/auth/login")
-      }
-      // Ignore SIGNED_IN and INITIAL_SESSION to prevent re-renders
-    })
+    initialize()
 
     return () => {
-      subscription.unsubscribe()
+      mounted = false
+      if (authSubscription) {
+        authSubscription.unsubscribe()
+      }
     }
-  }, []) // Empty dependency array to run only once
+  }, [router, supabase, t])
 
   const handleSignOut = async () => {
     if (isGuest) {
