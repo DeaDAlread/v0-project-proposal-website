@@ -9,8 +9,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Who Am I? - Multiplayer Party Game',
-  description: 'A fun multiplayer guessing game where players try to figure out the secret word through questions and answers.',
+  title: 'Stack Studio — Interactive Undo & Redo Demo',
+  description: 'Explore how stacks power undo and redo in a text editor. Type, undo, and redo changes in this interactive browser demo.',
   generator: 'v0.app',
   icons: {
     icon: [
